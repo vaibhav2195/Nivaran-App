@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../models/issue_model.dart';
-import '../../models/category_model.dart';
 import 'dart:developer' as developer;
 
 class CommunityImpactScreen extends StatefulWidget {
@@ -18,7 +17,6 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
   late TabController _tabController;
   bool _isLoading = true;
   List<Issue> _allIssues = [];
-  List<CategoryModel> _categories = [];
   Map<String, int> _issuesByCategory = {};
   Map<String, int> _issuesByStatus = {};
   Map<String, int> _issuesByMonth = {};
@@ -51,10 +49,6 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
       _allIssues = issues;
 
       // Fetch categories
-      final categoriesSnapshot = await FirebaseFirestore.instance.collection('categories').get();
-      _categories = categoriesSnapshot.docs.map((doc) {
-        return CategoryModel.fromMap(doc.data(), doc.id);
-      }).toList();
 
       // Process data
       _processIssueData();
@@ -225,7 +219,7 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
               title: Text(categoryName),
               trailing: Text('$count issues ($percentage%)'),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -265,7 +259,7 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
               title: Text(month),
               trailing: Text('${_issuesByMonth[month]} issues'),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -288,7 +282,8 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withAlpha(26),
+
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 32),
@@ -498,7 +493,7 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.2)),
+            belowBarData: BarAreaData(show: true, color: Colors.blue.withAlpha(51)),
           ),
         ],
       ),

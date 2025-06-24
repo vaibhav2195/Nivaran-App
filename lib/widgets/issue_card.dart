@@ -45,8 +45,8 @@ class _IssueCardState extends State<IssueCard> {
   void _updateOptimisticStateFromWidget() {
     _optimisticUpvotes = widget.issue.upvotes;
     _optimisticDownvotes = widget.issue.downvotes;
-    if (_currentUser != null && widget.issue.voters.containsKey(_currentUser!.uid)) {
-      _optimisticVote = widget.issue.voters[_currentUser!.uid];
+    if (_currentUser != null && widget.issue.voters.containsKey(_currentUser.uid)) {
+      _optimisticVote = widget.issue.voters[_currentUser.uid];
     } else {
       _optimisticVote = null;
     }
@@ -154,7 +154,7 @@ class _IssueCardState extends State<IssueCard> {
       return;
     }
 
-    final String userId = _currentUser!.uid;
+    final String userId = _currentUser.uid;
     final VoteType? previousOptimisticVote = _optimisticVote;
     final int previousOptimisticUpvotes = _optimisticUpvotes;
     final int previousOptimisticDownvotes = _optimisticDownvotes;
@@ -165,14 +165,22 @@ class _IssueCardState extends State<IssueCard> {
 
     if (_optimisticVote == voteType) {
       newLocalVoteState = null;
-      if (voteType == VoteType.upvote) newOptimisticUpvotes--;
-      else newOptimisticDownvotes--;
+      if (voteType == VoteType.upvote) {
+        newOptimisticUpvotes--;
+      }
+      else {
+        newOptimisticDownvotes--;
+      }
     } else {
       newLocalVoteState = voteType;
       if (_optimisticVote == VoteType.upvote) newOptimisticUpvotes--;
       if (_optimisticVote == VoteType.downvote) newOptimisticDownvotes--;
-      if (voteType == VoteType.upvote) newOptimisticUpvotes++;
-      else newOptimisticDownvotes++;
+      if (voteType == VoteType.upvote) {
+        newOptimisticUpvotes++;
+      }
+      else {
+        newOptimisticDownvotes++;
+      }
     }
 
     setStateIfMounted(() {

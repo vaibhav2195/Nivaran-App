@@ -368,7 +368,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           for (int i = 0; i < responseData['results'].length; i++) {
             var result = responseData['results'][i];
             if (result['alternatives'] != null && result['alternatives'].isNotEmpty) {
-              fullTranscript += (result['alternatives'][0]['transcript'] as String? ?? "") + " ";
+              fullTranscript = '$fullTranscript${result['alternatives'][0]['transcript'] as String? ?? ''} ';
             }
           }
           fullTranscript = fullTranscript.trim();
@@ -613,9 +613,9 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
            developer.log("Gemini suggested category: $suggestedCategoryName", name: "ReportDetailsScreen");
           CategoryModel? matchedCategory = _fetchedCategories.firstWhere(
               (cat) => cat.name.toLowerCase() == suggestedCategoryName.toLowerCase(),
-              orElse: () => null_category_model 
+              orElse: () => nullCategoryModel 
           );
-           if (matchedCategory != null_category_model) {
+           if (matchedCategory != nullCategoryModel) {
             setState(() => _selectedCategoryModel = matchedCategory);
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI suggested category: ${matchedCategory.name}')));
           } else {
@@ -634,7 +634,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     }
   }
   
-  static final CategoryModel null_category_model = CategoryModel(id: '', name: '', defaultDepartment: '');
+  static final CategoryModel nullCategoryModel = CategoryModel(id: '', name: '', defaultDepartment: '');
 
   Future<void> _submitReport() async {
     final userProfileService = Provider.of<UserProfileService>(context, listen: false);

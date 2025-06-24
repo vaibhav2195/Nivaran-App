@@ -9,7 +9,6 @@ import 'profile/account_screen.dart';
 import 'map/map_view_screen.dart';
 import 'notifications/notifications_screen.dart';
 import 'impact/community_impact_screen.dart';
-import '../services/offline_sync_service.dart';
 import '../widgets/offline_banner.dart';
 import '../utils/update_checker.dart';
 import 'dart:developer' as developer;

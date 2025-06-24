@@ -1,7 +1,6 @@
 // lib/screens/notifications/notifications_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../services/user_profile_service.dart';

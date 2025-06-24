@@ -124,8 +124,7 @@ class UserProfileService with ChangeNotifier {
   void clearUserProfile() {
     _currentUserProfile = null;
     _isLoadingProfile = false;
-    // TODO: Optionally, remove the FCM token from the user's document on explicit logout,
-    // or handle it server-side if a token becomes invalid. For now, tokens will remain.
+  
     notifyListeners();
     developer.log("UserProfileService: Profile cleared.", name: "UserProfileService");
   }

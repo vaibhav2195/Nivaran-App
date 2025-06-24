@@ -3,7 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:developer' as developer;
-import 'package:firebase_core/firebase_core.dart'; // Ensure Firebase is initialized for background
+
 
 // Function to handle background messages (must be a top-level function)
 @pragma('vm:entry-point')
@@ -98,9 +98,7 @@ class NotificationService {
       if (notification != null) {
         developer.log('Message also contained a notification: ${notification.title} / ${notification.body}', name: "NotificationService");
         _showLocalNotification(message);
-        // TODO: Optionally, save this to the in-app 'notifications' Firestore collection.
-        // This is ideally done by a Cloud Function when the notification is sent for consistency.
-        // If done client-side, ensure it's robust (e.g., handle duplicates if function also saves).
+        
       }
     });
 

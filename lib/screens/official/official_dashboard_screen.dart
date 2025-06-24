@@ -395,7 +395,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.05),
+              color: Theme.of(context).primaryColor.withAlpha(13),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
