@@ -39,7 +39,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
 
   bool _isSubmitting = false;
   final List<XFile> _additionalImages = [];
-  String? _selectedContributionType = 'additional_info';
+  String _selectedContributionType = 'additional_info';
 
   final List<Map<String, dynamic>> _contributionTypes = [
     {
@@ -126,20 +126,33 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                     ),
                     selected: _selectedContributionType == type['value'],
                     onSelected: (selected) {
-                      setState(() {
-                        _selectedContributionType = selected ? type['value'] as String : null;
-                      });
+                      if (selected) {
+                        setState(() {
+                          String previousType = _selectedContributionType;
+                          _selectedContributionType = type['value'] as String;
+                          
+                          // Only clear text field when switching between different text input types
+                          if ((previousType == 'additional_info' && _selectedContributionType == 'update') ||
+                              (previousType == 'update' && _selectedContributionType == 'additional_info')) {
+                            _additionalInfoController.clear();
+                          }
+                          
+                          // Clear images when switching away from evidence/update types
+                          if (_selectedContributionType != 'evidence' && _selectedContributionType != 'update') {
+                            _additionalImages.clear();
+                          }
+                        });
+                      }
                     },
                   );
                 }).toList(),
               ),
               const SizedBox(height: 8),
-              if (_selectedContributionType != null)
-                Text(
-                  _contributionTypes
-                      .firstWhere((t) => t['value'] == _selectedContributionType)['description'] as String,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
+              Text(
+                _contributionTypes
+                    .firstWhere((t) => t['value'] == _selectedContributionType)['description'] as String,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
               const SizedBox(height: 16),
 
               // Additional information input
@@ -149,12 +162,14 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomTextField(
+                      key: ValueKey(_selectedContributionType),
                       controller: _additionalInfoController,
                       labelText: _selectedContributionType == 'update' ? 'Update details' : 'Additional information',
                       hintText: _selectedContributionType == 'update'
                           ? 'Describe the current status of this issue...'
                           : 'Add more details about this issue...',
                       maxLines: 5,
+                      readOnly: false,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter some information';
@@ -162,6 +177,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
 
@@ -371,14 +387,37 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
         developer.log('Status update added with ID: ${statusRef.id}', name: 'IssueCollaboration');
       }
 
+      // Update issue document with collaboration data
+      Map<String, dynamic> issueUpdates = {
+        'collaborationCount': FieldValue.increment(1),
+        'lastCollaborationAt': FieldValue.serverTimestamp(),
+      };
+
       // Update issue if marking as affected
       if (_selectedContributionType == 'affected_user') {
-        await _firestore.collection('issues').doc(widget.issueId).update({
-          'peopleAffected': FieldValue.increment(1),
-          'affectedUserIds': FieldValue.arrayUnion([userProfile.uid]),
-        });
-        developer.log('Incremented peopleAffected count', name: 'IssueCollaboration');
+        issueUpdates['affectedUsersCount'] = FieldValue.increment(1);
+        issueUpdates['affectedUserIds'] = FieldValue.arrayUnion([userProfile.uid]);
+        developer.log('Incremented affectedUsersCount', name: 'IssueCollaboration');
       }
+
+      // Add evidence images to main issue document
+      if (_selectedContributionType == 'evidence' && imageUrls.isNotEmpty) {
+        issueUpdates['evidenceImages'] = FieldValue.arrayUnion(imageUrls);
+        developer.log('Added evidence images to issue', name: 'IssueCollaboration');
+      }
+
+      // Update status updates array for status updates
+      if (_selectedContributionType == 'update') {
+        issueUpdates['statusUpdates'] = FieldValue.arrayUnion([{
+          'text': _additionalInfoController.text.trim(),
+          'userId': userProfile.uid,
+          'username': userProfile.username ?? 'Anonymous',
+          'timestamp': FieldValue.serverTimestamp(),
+        }]);
+      }
+
+      await _firestore.collection('issues').doc(widget.issueId).update(issueUpdates);
+      developer.log('Updated issue document with collaboration data', name: 'IssueCollaboration');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -33,7 +33,7 @@ class LocationModel {
 
 class Issue {
   final String id;
-  final String description; // Final English description
+  final String description;
   final String category;
   final String? urgency;
   final List<String>? tags;
@@ -50,14 +50,18 @@ class Issue {
   final int commentsCount;
   final int affectedUsersCount;
   final List<String> affectedUserIds;
-  final String? originalSpokenText; // <-- NEW FIELD
-  final String? userInputLanguage; // <-- NEW FIELD
-  final String? aiRiskAnalysis; // Added from schema doc
-  final Timestamp? resolutionTimestamp; // Added from schema doc
-  final String? lastStatusUpdateBy; // Added from schema doc
-  final Timestamp? lastStatusUpdateAt; // Added from schema doc
-  final bool isUnresolved; // Added from schema doc
-
+  final String? originalSpokenText;
+  final String? userInputLanguage;
+  final String? aiRiskAnalysis;
+  final Timestamp? resolutionTimestamp;
+  final String? lastStatusUpdateBy;
+  final Timestamp? lastStatusUpdateAt;
+  final bool isUnresolved;
+  final String? duplicateOfIssueId; // <-- NEWLY ADDED FIELD
+  final List<String> evidenceImages;
+  final int collaborationCount;
+  final Timestamp? lastCollaborationAt;
+  final List<Map<String, dynamic>> statusUpdates;
 
   Issue({
     required this.id,
@@ -78,14 +82,21 @@ class Issue {
     required this.commentsCount,
     this.affectedUsersCount = 1,
     List<String>? affectedUserIds,
-    this.originalSpokenText, // <-- ADDED TO CONSTRUCTOR
-    this.userInputLanguage, // <-- ADDED TO CONSTRUCTOR
+    this.originalSpokenText,
+    this.userInputLanguage,
     this.aiRiskAnalysis,
     this.resolutionTimestamp,
     this.lastStatusUpdateBy,
     this.lastStatusUpdateAt,
     this.isUnresolved = true,
-  }) : affectedUserIds = affectedUserIds ?? [];
+    this.duplicateOfIssueId, // <-- NEWLY ADDED
+    List<String>? evidenceImages,
+    this.collaborationCount = 0,
+    this.lastCollaborationAt,
+    List<Map<String, dynamic>>? statusUpdates,
+  }) : affectedUserIds = affectedUserIds ?? [],
+       evidenceImages = evidenceImages ?? [],
+       statusUpdates = statusUpdates ?? [];
 
 
   factory Issue.fromFirestore(Map<String, dynamic> data, String documentId) {
@@ -121,13 +132,18 @@ class Issue {
       commentsCount: data['commentsCount'] as int? ?? 0,
       affectedUsersCount: data['affectedUsersCount'] as int? ?? 1,
       affectedUserIds: List<String>.from(data['affectedUserIds'] ?? []),
-      originalSpokenText: data['originalSpokenText'] as String?, // <-- ADDED MAPPING
-      userInputLanguage: data['userInputLanguage'] as String?, // <-- ADDED MAPPING
+      originalSpokenText: data['originalSpokenText'] as String?,
+      userInputLanguage: data['userInputLanguage'] as String?,
       aiRiskAnalysis: data['aiRiskAnalysis'] as String?,
       resolutionTimestamp: data['resolutionTimestamp'] as Timestamp?,
       lastStatusUpdateBy: data['lastStatusUpdateBy'] as String?,
       lastStatusUpdateAt: data['lastStatusUpdateAt'] as Timestamp?,
       isUnresolved: data['isUnresolved'] as bool? ?? (data['status'] != 'Resolved' && data['status'] != 'Rejected'),
+      duplicateOfIssueId: data['duplicateOfIssueId'] as String?, // <-- NEWLY ADDED
+      evidenceImages: List<String>.from(data['evidenceImages'] ?? []),
+      collaborationCount: data['collaborationCount'] as int? ?? 0,
+      lastCollaborationAt: data['lastCollaborationAt'] as Timestamp?,
+      statusUpdates: List<Map<String, dynamic>>.from(data['statusUpdates'] ?? []),
     );
   }
 
@@ -150,13 +166,18 @@ class Issue {
       'commentsCount': commentsCount,
       'affectedUsersCount': affectedUsersCount,
       'affectedUserIds': affectedUserIds,
-      if (originalSpokenText != null) 'originalSpokenText': originalSpokenText, // <-- ADDED TO MAP
-      if (userInputLanguage != null) 'userInputLanguage': userInputLanguage, // <-- ADDED TO MAP
+      if (originalSpokenText != null) 'originalSpokenText': originalSpokenText,
+      if (userInputLanguage != null) 'userInputLanguage': userInputLanguage,
       if (aiRiskAnalysis != null) 'aiRiskAnalysis': aiRiskAnalysis,
       if (resolutionTimestamp != null) 'resolutionTimestamp': resolutionTimestamp,
       if (lastStatusUpdateBy != null) 'lastStatusUpdateBy': lastStatusUpdateBy,
       if (lastStatusUpdateAt != null) 'lastStatusUpdateAt': lastStatusUpdateAt,
       'isUnresolved': isUnresolved,
+      if (duplicateOfIssueId != null) 'duplicateOfIssueId': duplicateOfIssueId, // <-- NEWLY ADDED
+      'evidenceImages': evidenceImages,
+      'collaborationCount': collaborationCount,
+      if (lastCollaborationAt != null) 'lastCollaborationAt': lastCollaborationAt,
+      'statusUpdates': statusUpdates,
     };
   }
 }

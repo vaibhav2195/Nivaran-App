@@ -1,7 +1,7 @@
 // lib/screens/report/report_details_screen.dart
 import 'dart:io';
-import 'dart:convert'; // For base64Encode and jsonEncode
-import 'dart:async'; 
+import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:cloud_functions/cloud_functions.dart'; // <-- ADD THIS IMPORT
 
 import '../../services/image_upload_service.dart';
 import '../../services/location_service.dart';
@@ -20,11 +21,12 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/auth_button.dart';
 import '../../models/app_user_model.dart';
 import '../../models/category_model.dart';
-import '../../models/issue_model.dart'; // For LocationModel
-import '../../secrets.dart'; 
+import '../../models/issue_model.dart';
+import '../../secrets.dart';
 import 'dart:developer' as developer;
 
-// Helper class for language options
+import '../feed/issue_collaboration_screen.dart'; // <-- ADD THIS IMPORT
+
 class SpeechLanguage {
   final String code;
   final String name;
@@ -70,18 +72,17 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   bool _isRecording = false;
   String? _recordedAudioPath;
   bool _audioRecorderInitialized = false;
-  final String _tempAudioFileName = 'temp_audio.amr'; 
-  final int _targetSampleRate = 16000; 
+  final String _tempAudioFileName = 'temp_audio.amr';
+  final int _targetSampleRate = 16000;
 
-  bool _isProcessingSTT = false; 
-  bool _isTranslatingText = false; 
-  bool _isSuggestingCategory = false; 
-  String? _originalTranscribedText; 
+  bool _isProcessingSTT = false;
+  bool _isTranslatingText = false;
+  bool _isSuggestingCategory = false;
+  String? _originalTranscribedText;
   late SpeechLanguage _selectedSpokenLanguage;
-  
+
   String? _detectedUrgency;
   bool _isDetectingUrgency = false;
-
 
   static const List<SpeechLanguage> _supportedSpokenLanguages = [
     SpeechLanguage('en-IN', 'English (India)'),
@@ -101,16 +102,16 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     SpeechLanguage('doi-IN', 'डोगरी (Dogri)'),
     SpeechLanguage('ne-IN', 'नेपाली (Nepali - India)'),
   ];
-
+  static final CategoryModel nullCategoryModel = CategoryModel(id: '', name: '', defaultDepartment: '');
 
   @override
   void initState() {
     super.initState();
     _selectedSpokenLanguage = _supportedSpokenLanguages.firstWhere(
-        (lang) => lang.code == 'hi-IN', 
+        (lang) => lang.code == 'hi-IN',
         orElse: () => _supportedSpokenLanguages.first
     );
-    _audioRecorder = FlutterSoundRecorder(); 
+    _audioRecorder = FlutterSoundRecorder();
     _initializeAudioRecorder();
     _fetchInitialData();
   }
@@ -174,19 +175,19 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     if (!_audioRecorderInitialized || _audioRecorder == null || _isRecording) return;
     try {
       Directory tempDir = await getTemporaryDirectory();
-      _recordedAudioPath = '${tempDir.path}/$_tempAudioFileName'; 
+      _recordedAudioPath = '${tempDir.path}/$_tempAudioFileName';
       await _audioRecorder!.startRecorder(
         toFile: _recordedAudioPath,
-        codec: Codec.amrWB, 
-        sampleRate: _targetSampleRate, 
-        numChannels: 1, 
+        codec: Codec.amrWB,
+        sampleRate: _targetSampleRate,
+        numChannels: 1,
       );
       if (mounted) {
         setState(() {
           _isRecording = true;
           _descriptionController.text = "Listening in ${_selectedSpokenLanguage.name}...";
-          _originalTranscribedText = null; 
-          _detectedUrgency = null; 
+          _originalTranscribedText = null;
+          _detectedUrgency = null;
         });
       }
       developer.log("Started recording to: $_recordedAudioPath (AMR_WB) at $_targetSampleRate Hz, 1 channel, Language: ${_selectedSpokenLanguage.code}", name: "ReportDetailsScreen");
@@ -202,7 +203,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     }
   }
 
-  Future<void> _stopRecordingAndProcessAudio() async { 
+  Future<void> _stopRecordingAndProcessAudio() async {
     if (!_audioRecorderInitialized || _audioRecorder == null || !_isRecording) return;
     
     String? audioFilePath;
@@ -213,23 +214,23 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       if (mounted) {
         setState(() {
           _isRecording = false;
-          _isProcessingSTT = true; 
+          _isProcessingSTT = true;
           _descriptionController.text = "Processing audio...";
-          _recordedAudioPath = audioFilePath; 
+          _recordedAudioPath = audioFilePath;
         });
       } else {
-        return; 
+        return;
       }
 
       if (_recordedAudioPath != null && _recordedAudioPath!.isNotEmpty) {
         File audioFile = File(_recordedAudioPath!);
-        await Future.delayed(const Duration(milliseconds: 300)); 
+        await Future.delayed(const Duration(milliseconds: 300));
 
         if (await audioFile.exists()) {
           int fileLength = await audioFile.length();
           developer.log("Audio file exists. Path: $_recordedAudioPath. Size: $fileLength bytes", name: "ReportDetailsScreen");
 
-          if (fileLength < 1024) { 
+          if (fileLength < 1024) {
             developer.log("Recorded audio file is very small ($fileLength bytes).", name: "ReportDetailsScreen");
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Recorded audio is too short. Please speak longer.")));
             if (mounted) {
@@ -253,12 +254,12 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           if (transcribedText != null && transcribedText.isNotEmpty) {
             if (mounted) {
               setState(() {
-                _originalTranscribedText = transcribedText; 
+                _originalTranscribedText = transcribedText;
               });
             }
             String finalTextForDescription = transcribedText;
             
-            bool processForEnglish = true; 
+            bool processForEnglish = true;
 
             if (processForEnglish) {
               if (mounted) setState(() => _isTranslatingText = true);
@@ -273,13 +274,11 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             
             if (mounted) {
               _descriptionController.text = finalTextForDescription;
-              // Check if original should be hidden (if it's English and same as final)
               if (_selectedSpokenLanguage.code.toLowerCase().startsWith('en') || 
                   finalTextForDescription.trim().toLowerCase() == _originalTranscribedText?.trim().toLowerCase()) {
-                  setState(() { _originalTranscribedText = null; }); 
+                  setState(() { _originalTranscribedText = null; });
               }
               
-              // Proceed with AI suggestions
               await _suggestCategoryGemini(finalTextForDescription);
               if (mounted && widget.imagePath.isNotEmpty && _currentPosition != null) {
                  List<int> imageBytesForUrgency = await File(widget.imagePath).readAsBytes();
@@ -293,7 +292,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           } else {
              if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not transcribe audio. Please ensure you spoke clearly.")));
-                _descriptionController.clear(); 
+                _descriptionController.clear();
                 setState(() => _originalTranscribedText = null);
              }
           }
@@ -315,7 +314,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       developer.log("Error stopping recording or processing audio: $e", name: "ReportDetailsScreen", stackTrace: s);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error processing audio: ${e.toString()}")));
-        setState(() { 
+        setState(() {
           _isRecording = false;
           _isProcessingSTT = false;
           _isTranslatingText = false;
@@ -324,22 +323,22 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           _descriptionController.clear();
         });
       }
-    } 
+    }
   }
 
   Future<Map<String, String?>?> _googleCloudSpeechToText(String base64Audio, String languageCodeForSTT) async {
-    final String apiKey = googleSpeechToTextApiKey; 
+    final String apiKey = googleSpeechToTextApiKey;
     const String url = 'https://speech.googleapis.com/v1/speech:recognize';
     
     final Map<String, dynamic> requestBody = {
       "config": {
-        "encoding": "AMR_WB", 
-        "sampleRateHertz": _targetSampleRate, 
-        "audioChannelCount": 1, 
-        "languageCode": languageCodeForSTT, 
+        "encoding": "AMR_WB",
+        "sampleRateHertz": _targetSampleRate,
+        "audioChannelCount": 1,
+        "languageCode": languageCodeForSTT,
         "enableAutomaticPunctuation": true,
-        "enableWordConfidence": true, 
-        "model": "default" 
+        "enableWordConfidence": true,
+        "model": "default"
       },
       "audio": {
         "content": base64Audio,
@@ -350,7 +349,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$url?key=$apiKey'), 
+        Uri.parse('$url?key=$apiKey'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(requestBody),
       );
@@ -359,7 +358,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        developer.log("Google STT Full Response: ${response.body}", name: "ReportDetailsScreen"); 
+        developer.log("Google STT Full Response: ${response.body}", name: "ReportDetailsScreen");
 
         if (responseData['results'] != null && responseData['results'].isNotEmpty) {
           String fullTranscript = "";
@@ -416,14 +415,14 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     if (textToProcess.isEmpty) return null;
     
     String instruction;
-    String exampleInput = "हमारे गांव में नाला खराब हो गया है। कृपया उसे ठीक करवाएं।"; 
-    String exampleOutput = "The drain in our village is damaged; please arrange for its repair."; 
+    String exampleInput = "हमारे गांव में नाला खराब हो गया है। कृपया उसे ठीक करवाएं।";
+    String exampleOutput = "The drain in our village is damaged; please arrange for its repair.";
 
     if (sourceLanguage != null && sourceLanguage.toLowerCase().startsWith('en')) {
       instruction = "Refine the following English text, which may contain Hinglish or colloquial Indian English phrases, into a single, clear, standard Indian English sentence. Output only the refined sentence.";
-    } else if (sourceLanguage != null) { 
+    } else if (sourceLanguage != null) {
       instruction = "Translate the following text from its original Indian language (spoken as $sourceLanguage) into a single, clear, standard Indian English sentence. Output only the translated sentence.";
-    } else { 
+    } else {
       instruction = "The following text might be in an Indian language or Hinglish. Convert it into a single, clear, standard Indian English sentence. Output only the converted sentence.";
     }
     
@@ -432,9 +431,9 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     final payload = {
       "contents": [{"parts": [{"text": prompt}]}],
       "generationConfig": {
-        "temperature": 0.2, 
-        "maxOutputTokens": textToProcess.length * 4 + 150, 
-        "stopSequences": ["\n\n", "Input Text:", "Output:", "Desired Output Format:"] 
+        "temperature": 0.2,
+        "maxOutputTokens": textToProcess.length * 4 + 150,
+        "stopSequences": ["\n\n", "Input Text:", "Output:", "Desired Output Format:"]
       }
     };
 
@@ -460,17 +459,17 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           List<String> prefixesToRemove = [
             "Output (single Indian English sentence):", "Output:", "The refined sentence is:",
             "Here is the refined sentence:", "Translation:", "Standard Indian English:",
-            "Desired Output Format (single, standard Indian English sentence):" 
+            "Desired Output Format (single, standard Indian English sentence):"
           ];
           for (String prefix in prefixesToRemove) {
             if (processedText.toLowerCase().startsWith(prefix.toLowerCase())) {
               processedText = processedText.substring(prefix.length).trim();
             }
           }
-          processedText = processedText.replaceAll("\"", "").trim(); 
+          processedText = processedText.replaceAll("\"", "").trim();
 
           developer.log("Gemini Translation/Refinement to Indian English (cleaned): $processedText", name: "ReportDetailsScreen");
-          return processedText.isNotEmpty ? processedText : null; 
+          return processedText.isNotEmpty ? processedText : null;
         } else {
           developer.log("Gemini Translation/Refinement: Unexpected response structure.", name: "ReportDetailsScreen");
         }
@@ -484,7 +483,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Text processing to Indian English failed. Using original text.")));
     }
-    return null; 
+    return null;
   }
 
   Future<void> _detectUrgencyGemini(String description, String imageBase64, LocationModel location) async {
@@ -492,7 +491,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     if (mounted) setState(() => _isDetectingUrgency = true);
 
     String locationContext = "Location: ${location.address}. Coordinates: (${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}).";
-    String prompt = 
+    String prompt =
         "Analyze the following civic issue report to determine its urgency. Consider the description, the visual information from the image, and the location context. Respond with only one of these urgency levels: 'Low', 'Medium', or 'High'.\n\n"
         "Description: \"$description\"\n"
         "Location Context: \"$locationContext\"\n\n"
@@ -505,7 +504,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             {"text": prompt},
             {
               "inlineData": {
-                "mimeType": "image/jpeg", 
+                "mimeType": "image/jpeg",
                 "data": imageBase64
               }
             }
@@ -514,7 +513,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       ],
       "generationConfig": {
         "temperature": 0.3,
-        "maxOutputTokens": 10, 
+        "maxOutputTokens": 10,
         "stopSequences": ["\n"]
       }
     };
@@ -522,7 +521,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$geminiApiKey'), 
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$geminiApiKey'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
@@ -548,27 +547,26 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
           } else {
             developer.log("Gemini returned unexpected urgency level: $detectedLevel", name: "ReportDetailsScreen");
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI could not determine urgency reliably.')));
-             setState(() => _detectedUrgency = "Medium"); 
+             setState(() => _detectedUrgency = "Medium");
           }
         } else {
           developer.log("Gemini Urgency Detection: Unexpected response structure.", name: "ReportDetailsScreen");
            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI urgency detection format error.')));
-           setState(() => _detectedUrgency = "Medium"); 
+           setState(() => _detectedUrgency = "Medium");
         }
       } else {
         developer.log("Gemini Urgency Detection API Error: ${response.statusCode} - ${response.body}", name: "ReportDetailsScreen");
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Urgency Detection Error: ${response.statusCode}')));
-        setState(() => _detectedUrgency = "Medium"); 
+        setState(() => _detectedUrgency = "Medium");
       }
     } catch (e) {
       developer.log("Error calling Gemini for urgency detection: $e", name: "ReportDetailsScreen");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error in AI urgency detection: ${e.toString()}')));
-      setState(() => _detectedUrgency = "Medium"); 
+      setState(() => _detectedUrgency = "Medium");
     } finally {
       if (mounted) setState(() => _isDetectingUrgency = false);
     }
   }
-
 
   Future<void> _suggestCategoryGemini(String descriptionText) async {
     if (descriptionText.isEmpty) return;
@@ -613,7 +611,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
            developer.log("Gemini suggested category: $suggestedCategoryName", name: "ReportDetailsScreen");
           CategoryModel? matchedCategory = _fetchedCategories.firstWhere(
               (cat) => cat.name.toLowerCase() == suggestedCategoryName.toLowerCase(),
-              orElse: () => nullCategoryModel 
+              orElse: () => nullCategoryModel
           );
            if (matchedCategory != nullCategoryModel) {
             setState(() => _selectedCategoryModel = matchedCategory);
@@ -633,20 +631,18 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       if (mounted) setState(() => _isSuggestingCategory = false);
     }
   }
-  
-  static final CategoryModel nullCategoryModel = CategoryModel(id: '', name: '', defaultDepartment: '');
 
+  // --- NEW SUBMISSION LOGIC ---
   Future<void> _submitReport() async {
     final userProfileService = Provider.of<UserProfileService>(context, listen: false);
     final AppUser? appUser = userProfileService.currentUserProfile;
 
     if (!_formKey.currentState!.validate()) return;
-    
     if (_selectedCategoryModel == null) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a category.')));
       return;
     }
-     if (_detectedUrgency == null) { 
+    if (_detectedUrgency == null) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Urgency level has not been determined yet.')));
       return;
     }
@@ -658,25 +654,110 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not authenticated.')));
       return;
     }
-     if (appUser.username == null || appUser.username!.isEmpty) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username not found.')));
-      return;
-    }
 
-    if (!mounted) return;
     setState(() => _isSubmitting = true);
+
+    try {
+      // 1. Get the image data as a Base64 string
+      final imageBytes = await File(widget.imagePath).readAsBytes();
+      final base64Image = base64Encode(imageBytes);
+
+      // 2. Call the Cloud Function
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('checkForDuplicates');
+      final response = await callable.call<Map<String, dynamic>>({
+        'newImageData': base64Image,
+        'newDescription': _descriptionController.text.trim(),
+      });
+
+      final isDuplicate = response.data['isDuplicate'] as bool;
+      final existingIssueId = response.data['existingIssueId'] as String?;
+      final existingIssueTitle = response.data['existingIssueTitle'] as String?;
+
+      // 3. Handle the response
+      if (isDuplicate && existingIssueId != null) {
+        if (!mounted) return;
+        // DUPLICATE FOUND: Show a dialog and offer to collaborate
+        final result = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Similar Issue Found"),
+            content: Text(
+                "This seems related to an existing report:\n\n'${existingIssueTitle ?? 'Untitled Issue'}'\n\nWould you like to add your photo and info as evidence to it?"),
+            actions: [
+              TextButton(
+                child: const Text("Create New Anyway"),
+                onPressed: () => Navigator.of(ctx).pop(false), // User wants to create a new one
+              ),
+              ElevatedButton(
+                child: const Text("Yes, Add to Existing"),
+                onPressed: () => Navigator.of(ctx).pop(true), // User wants to collaborate
+              ),
+            ],
+          ),
+        );
+
+        if (result == true) { // User chose to collaborate
+          if (!mounted) return;
+          // Fetch the full issue object to pass to the collaboration screen
+          final issueDoc = await FirebaseFirestore.instance.collection('issues').doc(existingIssueId).get();
+          if (issueDoc.exists) {
+            if (!mounted) return;
+            final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
+            Navigator.push(context, MaterialPageRoute(builder: (context) =>
+              IssueCollaborationScreen(issueId: existingIssueId, issue: existingIssue)
+            ));
+          }
+        } else { // User chose to create a new one anyway, or dismissed dialog
+          await _createNewIssue(isDuplicateOf: existingIssueId);
+        }
+
+      } else {
+        // NO DUPLICATE: Proceed to create a new issue
+        await _createNewIssue();
+      }
+    } on FirebaseFunctionsException catch (e) {
+      developer.log("Cloud function error: ${e.message}", name: "ReportDetailsScreen", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error checking for duplicates: ${e.message}. Submitting as new issue.")),
+        );
+        await _createNewIssue(); // Fallback to creating a new issue
+      }
+    } catch (e) {
+      developer.log("Error during submission process: $e", name: "ReportDetailsScreen", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred: $e. Submitting as new issue.")),
+        );
+        await _createNewIssue(); // Fallback to creating a new issue
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  // Create a new function that contains your OLD submission logic
+  Future<void> _createNewIssue({String? isDuplicateOf}) async {
+    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+    final AppUser? appUser = userProfileService.currentUserProfile;
+
+    // Re-validate just in case
+    if (appUser == null || _currentPosition == null || _selectedCategoryModel == null) return;
 
     try {
       final String? imageUrl = await _imageUploadService.uploadImage(File(widget.imagePath));
       if (imageUrl == null) throw Exception('Failed to upload image.');
-      
-      final String assignedDepartment = _selectedCategoryModel!.defaultDepartment; 
+
+      final String assignedDepartment = _selectedCategoryModel!.defaultDepartment;
       final List<String> tagsList = _tagsController.text.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
 
       final Map<String, dynamic> issueData = {
-        'description': _descriptionController.text.trim(), 
+        'description': _descriptionController.text.trim(),
         'category': _selectedCategoryModel!.name,
-        'urgency': _detectedUrgency, 
+        'urgency': _detectedUrgency,
         'tags': tagsList.isNotEmpty ? tagsList : null,
         'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
@@ -697,7 +778,8 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         'affectedUsersCount': 1,
         'affectedUserIds': [appUser.uid],
         'originalSpokenText': (_originalTranscribedText != null && _originalTranscribedText!.trim().toLowerCase() != _descriptionController.text.trim().toLowerCase()) ? _originalTranscribedText : null,
-        'userInputLanguage': _selectedSpokenLanguage.code, 
+        'userInputLanguage': _selectedSpokenLanguage.code,
+        if (isDuplicateOf != null) 'duplicateOfIssueId': isDuplicateOf, // Add the duplicate link
       };
 
       await _firestoreService.addIssue(issueData);
@@ -707,16 +789,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
         Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
       }
-
     } catch (e) {
-      developer.log('Failed to submit report: ${e.toString()}', name: 'ReportDetailsScreen', error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit report: ${e.toString().characters.take(100)}...')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+       developer.log('Failed to create new issue: ${e.toString()}', name: 'ReportDetailsScreen', error: e);
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Failed to submit report: ${e.toString().characters.take(100)}...')),
+         );
+       }
     }
   }
 
@@ -739,12 +818,10 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     
     bool isAnyProcessing = _isProcessingSTT || _isTranslatingText || _isSuggestingCategory || _isDetectingUrgency;
     
-    // Updated logic for showOriginalText
-    bool showOriginalText = !_selectedSpokenLanguage.code.toLowerCase().startsWith('en') && // Only show if non-English was selected for speaking
+    bool showOriginalText = !_selectedSpokenLanguage.code.toLowerCase().startsWith('en') &&
                            _originalTranscribedText != null && 
                            _originalTranscribedText!.isNotEmpty &&
                            _originalTranscribedText!.trim().toLowerCase() != _descriptionController.text.trim().toLowerCase();
-
 
     return Scaffold(
       appBar: AppBar(
@@ -849,7 +926,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                         ),
                         SizedBox(width: screenWidth * 0.02),
                         Padding(
-                          padding: const EdgeInsets.only(top: 30.0), 
+                          padding: const EdgeInsets.only(top: 30.0),
                           child: IconButton(
                             icon: Icon(
                               _isRecording ? Icons.stop_circle_outlined : Icons.mic_rounded,
@@ -859,12 +936,12 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                             tooltip: _isRecording ? "Stop Recording" : "Record Description in ${_selectedSpokenLanguage.name}",
                             onPressed: (_audioRecorderInitialized && !isAnyProcessing)
                                 ? (_isRecording ? _stopRecordingAndProcessAudio : _startRecording)
-                                : null, 
+                                : null,
                           ),
                         ),
                       ],
                     ),
-                    if (isAnyProcessing) 
+                    if (isAnyProcessing)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
@@ -873,10 +950,10 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                             const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                             const SizedBox(width: 8),
                             Text(
-                              _isProcessingSTT ? "Transcribing..." : 
-                              _isDetectingUrgency ? "Detecting urgency..." : // Added this
-                              _isTranslatingText ? "Processing to Indian English..." : 
-                              _isSuggestingCategory ? "Suggesting category..." : "Processing...", 
+                              _isProcessingSTT ? "Transcribing..." :
+                              _isDetectingUrgency ? "Detecting urgency..." :
+                              _isTranslatingText ? "Processing to Indian English..." :
+                              _isSuggestingCategory ? "Suggesting category..." : "Processing...",
                               style: const TextStyle(fontStyle: FontStyle.italic)
                             ),
                           ],
@@ -890,7 +967,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Original transcription (Spoken in: ${_selectedSpokenLanguage.name}):", 
+                              "Original transcription (Spoken in: ${_selectedSpokenLanguage.name}):",
                               style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500, color: Colors.grey[700]),
                             ),
                             const SizedBox(height: 4),
@@ -915,7 +992,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                     
                     Text("Category*", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
-                    DropdownButtonFormField<CategoryModel>( 
+                    DropdownButtonFormField<CategoryModel>(
                       decoration: const InputDecoration(
                         hintText: 'Select Category',
                       ),
@@ -949,7 +1026,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       child: Text(
                         _isDetectingUrgency ? 'Analyzing urgency...' : (_detectedUrgency ?? 'Urgency not yet determined'),
                         style: textTheme.bodyLarge?.copyWith(
-                          fontSize: 15, 
+                          fontSize: 15,
                           color: _isDetectingUrgency ? Colors.orange.shade800 : (_detectedUrgency == null ? Colors.grey[700] : Colors.blue.shade800),
                           fontStyle: _detectedUrgency == null && !_isDetectingUrgency ? FontStyle.italic : FontStyle.normal,
                           fontWeight: _detectedUrgency != null ? FontWeight.w600 : FontWeight.normal,

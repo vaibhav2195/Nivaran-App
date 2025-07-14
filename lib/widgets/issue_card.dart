@@ -7,6 +7,7 @@ import '../models/issue_model.dart';
 import '../services/firestore_service.dart';
 import '../screens/full_screen_image_view.dart';
 import '../widgets/comments_dialog.dart';
+import '../screens/feed/issue_collaboration_screen.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../services/risk_prediction_service.dart';
@@ -77,6 +78,29 @@ class _IssueCardState extends State<IssueCard> {
   void setStateIfMounted(VoidCallback f) {
     if (mounted) {
       setState(f);
+    }
+  }
+
+  void _navigateToCollaboration() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IssueCollaborationScreen(
+          issueId: widget.issue.id,
+          issue: widget.issue,
+        ),
+      ),
+    );
+    
+    if (result == true && mounted) {
+      // Refresh the issue data if collaboration was added
+      // This will trigger a rebuild of the parent widget
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thank you for your contribution!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -231,6 +255,126 @@ class _IssueCardState extends State<IssueCard> {
     } finally {
       setStateIfMounted(() => _isFetchingRisk = false);
     }
+  }
+
+  Widget _buildImageCarousel() {
+    List<String> allImages = [];
+    if (widget.issue.imageUrl.isNotEmpty) {
+      allImages.add(widget.issue.imageUrl);
+    }
+    allImages.addAll(widget.issue.evidenceImages);
+
+    if (allImages.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        Stack(
+          children: [
+            SizedBox(
+              height: 180,
+              child: PageView.builder(
+                itemCount: allImages.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImageView(imageUrl: allImages[index]),
+                      ),
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Container(
+                          width: double.infinity,
+                          color: Colors.grey[200],
+                          child: Image.network(
+                            allImages[index],
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) =>
+                                loadingProgress == null
+                                    ? child
+                                    : const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                                      ),
+                            errorBuilder: (context, error, stackTrace) {
+                              developer.log(
+                                "Error loading image in IssueCard: $error",
+                                name: "IssueCard",
+                              );
+                              return Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Image count indicator
+            if (allImages.length > 1)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.photo_library_outlined,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '+${allImages.length - 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // Page indicator dots
+        if (allImages.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                allImages.length,
+                (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[400],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildRiskPredictionSection() {
@@ -432,28 +576,60 @@ class _IssueCardState extends State<IssueCard> {
                 ],
               ),
             SizedBox(height: widget.issue.imageUrl.isNotEmpty ? 12 : 8),
-            if (widget.issue.imageUrl.isNotEmpty)
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FullScreenImageView(imageUrl: widget.issue.imageUrl))),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Container(
-                    height: 180,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: Image.network(
-                      widget.issue.imageUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) => loadingProgress == null ? child : const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
-                      errorBuilder: (context, error, stackTrace) {
-                        developer.log("Error loading image in IssueCard: $error", name: "IssueCard");
-                        return Center(child: Icon(Icons.broken_image_outlined, color: Colors.grey[400], size: 40));
-                      },
-                    ),
-                  ),
+            if (widget.issue.imageUrl.isNotEmpty || widget.issue.evidenceImages.isNotEmpty)
+              _buildImageCarousel(),
+            if (widget.issue.imageUrl.isNotEmpty) _buildRiskPredictionSection(),
+            // Collaboration indicators
+            if (widget.issue.affectedUsersCount > 1 || widget.issue.collaborationCount > 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    if (widget.issue.affectedUsersCount > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.people_alt_outlined, size: 14, color: Colors.blue.shade600),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${widget.issue.affectedUsersCount} people affected',
+                              style: TextStyle(fontSize: 11, color: Colors.blue.shade600, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (widget.issue.affectedUsersCount > 1 && widget.issue.collaborationCount > 0)
+                      const SizedBox(width: 8),
+                    if (widget.issue.collaborationCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.group_work_outlined, size: 14, color: Colors.green.shade600),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${widget.issue.collaborationCount} contributions',
+                              style: TextStyle(fontSize: 11, color: Colors.green.shade600, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            if (widget.issue.imageUrl.isNotEmpty) _buildRiskPredictionSection(),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -464,7 +640,9 @@ class _IssueCardState extends State<IssueCard> {
                 const SizedBox(width: 8),
                 _ActionChipButton(icon: Icons.chat_bubble_outline_rounded, label: widget.issue.commentsCount.toString(), onTap: () => showDialog(context: context, builder: (context) => CommentsDialog(issueId: widget.issue.id, issueDescription: widget.issue.description))),
                 const SizedBox(width: 8),
-                _ActionChipButton(icon: Icons.share_outlined, label: "Share", onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share Issue - Coming Soon!')))),
+                _ActionChipButton(icon: Icons.add_circle_outline, label: "Contribute", onTap: () => _navigateToCollaboration()),
+                const SizedBox(width: 8),
+                _ActionChipButton(icon: Icons.share_outlined, label: "Share", onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share Issue - Coming Soon!'))))
               ],
             ),
           ],
