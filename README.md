@@ -18,9 +18,10 @@ Nivaran empowers citizens to report various local problems such as potholes, gar
     * Social login with Google.
     * Email verification.
 * **Issue Reporting:**
-    * Create detailed issue reports with title, description, and category.
+    * Voice-Based Issue Reporting: Users can select language and speak issue description using voice commands, which are then converted to text and submitted as issue reports.
     * Automatically fetch and attach geo-location (latitude/longitude and address) to the report.
     * AI-powered automatic issue category selection (e.g., Road Maintenance, Waste Management, Water Supply).
+    * AI-powered urgency detection: The app uses natural language processing to analyze the issue description and automatically flag it as urgent if certain keywords or patterns and location are detected.
     * Smart duplicate detection to prevent reporting the same issue multiple times.
 * **Issue Tracking & Feed:**
     * View a live feed of issues reported by others.
