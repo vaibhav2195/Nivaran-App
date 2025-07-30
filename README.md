@@ -16,13 +16,11 @@ Nivaran empowers citizens to report various local problems such as potholes, gar
 * **User Authentication:**
     * Sign up and log in using Email/Password.
     * Social login with Google.
-    * Social login with Facebook.
     * Email verification.
 * **Issue Reporting:**
     * Create detailed issue reports with title, description, and category.
-    * Capture and attach multiple images to a report.
     * Automatically fetch and attach geo-location (latitude/longitude and address) to the report.
-    * Select issue category (e.g., Road Maintenance, Waste Management, Water Supply).
+    * AI-powered automatic issue category selection (e.g., Road Maintenance, Waste Management, Water Supply).
     * Smart duplicate detection to prevent reporting the same issue multiple times.
 * **Issue Tracking & Feed:**
     * View a live feed of issues reported by others.
@@ -49,7 +47,7 @@ Nivaran empowers citizens to report various local problems such as potholes, gar
     * Filter and sort issues by category, status, priority, location, or date.
 * **Issue Management:**
     * View detailed issue reports submitted by citizens.
-    * Update the status of issues (e.g., "New," "Acknowledged," "In Progress," "Resolved," "Rejected").
+    * Update the status of issues (e.g.,"Acknowledged," "In Progress," "Resolved," "Rejected").
     * Assign priority to issues.
     * Add internal comments or notes for issues.
 * **Statistics & Reporting:**
