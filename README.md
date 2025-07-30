@@ -23,11 +23,13 @@ Nivaran empowers citizens to report various local problems such as potholes, gar
     * Capture and attach multiple images to a report.
     * Automatically fetch and attach geo-location (latitude/longitude and address) to the report.
     * Select issue category (e.g., Road Maintenance, Waste Management, Water Supply).
+    * Smart duplicate detection to prevent reporting the same issue multiple times.
 * **Issue Tracking & Feed:**
     * View a live feed of issues reported by others.
     * Filter issues by category or status.
     * View detailed information for each issue, including images, location on a map, and current status.
     * Add comments to issues.
+    * Collaborate on issues by adding further evidence and updates.
     * Receive real-time notifications on status updates for reported or followed issues.
 * **Map View:**
     * Visualize reported issues on an interactive map.
