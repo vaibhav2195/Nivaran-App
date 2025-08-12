@@ -18,7 +18,7 @@ Nivaran empowers citizens to report various local problems such as potholes, gar
     * Social login with Google.
     * Email verification.
 * **Issue Reporting:**
-    * Voice-Based Issue Reporting: Users can select language and speak issue description using voice commands, which are then converted to text and submitted as issue reports.
+    * Voice-Based Issue Reporting: Users can select language and speak issue description using voice commands, which are then converted to text and submitted as issue reports.p
     * Automatically fetch and attach geo-location (latitude/longitude and address) to the report.
     * AI-powered automatic issue category selection (e.g., Road Maintenance, Waste Management, Water Supply).
     * AI-powered urgency detection: The app uses natural language processing to analyze the issue description and automatically flag it as urgent if certain keywords or patterns and location are detected.
@@ -96,7 +96,7 @@ Here’s an overview of the **Nivaran** app’s key screens and features:
 
 * **Frontend:** Flutter
 * **Backend & Database:** Firebase
-    * **Authentication:** Firebase Auth (Email/Password, Google, Facebook)
+    * **Authentication:** Firebase Auth (Email/Password, Google,)
     * **Database:** Cloud Firestore (for storing user data, issues, comments, etc.)
     * **Storage:** Firebase Storage (for image uploads)
     * **Push Notifications:** Firebase Cloud Messaging (FCM)
@@ -107,14 +107,6 @@ Here’s an overview of the **Nivaran** app’s key screens and features:
 * **HTTP Client:** `http` package
 * **Local Notifications:** `flutter_local_notifications`
 * **Charting:** `fl_chart` (for official statistics)
-* **Other Key Packages:**
-    * `intl` (Internationalization & Date Formatting)
-    * `url_launcher` (Opening external links)
-    * `package_info_plus` (App version checking)
-    * `path_provider` (File system paths)
-    * `permission_handler` (Runtime permissions)
-    * `connectivity_plus` (Network status)
-    * `flutter_dotenv` (Environment variable management)
 
 ## Project Structure
 
