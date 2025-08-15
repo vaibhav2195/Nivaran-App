@@ -7,6 +7,7 @@ import '../models/issue_model.dart';
 import '../services/firestore_service.dart';
 import '../screens/full_screen_image_view.dart';
 import '../widgets/comments_dialog.dart';
+import '../widgets/duplicate_issue_badge.dart';
 import '../screens/feed/issue_collaboration_screen.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
@@ -101,6 +102,55 @@ class _IssueCardState extends State<IssueCard> {
           backgroundColor: Colors.green,
         ),
       );
+    }
+  }
+  
+  // Navigate to the original issue when duplicate badge is tapped
+  void _navigateToOriginalIssue(String originalIssueId) async {
+    try {
+      // Fetch the original issue from Firestore
+      final DocumentSnapshot issueDoc = await FirebaseFirestore.instance
+          .collection('issues')
+          .doc(originalIssueId)
+          .get();
+      
+      if (!issueDoc.exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Original issue not found.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+      
+      final Map<String, dynamic> issueData = issueDoc.data() as Map<String, dynamic>;
+      final Issue originalIssue = Issue.fromFirestore(issueData, originalIssueId);
+      
+      if (mounted) {
+        // Navigate to the original issue using the same screen that displays this issue
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => IssueCollaborationScreen(
+              issueId: originalIssueId,
+              issue: originalIssue,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error navigating to original issue: ${e.toString()}', name: 'IssueCard');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error loading original issue.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -485,6 +535,8 @@ class _IssueCardState extends State<IssueCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if this issue is marked as a duplicate
+    final bool isDuplicate = widget.issue.duplicateOfIssueId != null && widget.issue.duplicateOfIssueId!.isNotEmpty;
     final textTheme = Theme.of(context).textTheme;
     final bool userHasUpvoted = _optimisticVote == VoteType.upvote;
     final bool userHasDownvoted = _optimisticVote == VoteType.downvote;
@@ -574,6 +626,16 @@ class _IssueCardState extends State<IssueCard> {
                   const SizedBox(width: 4),
                   Expanded(child: Text(widget.issue.location.address, style: textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontSize: 12.5, fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis)),
                 ],
+              ),
+            
+            // Display duplicate badge if this issue is marked as a duplicate
+            if (isDuplicate)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: DuplicateIssueBadge(
+                  duplicateOfIssueId: widget.issue.duplicateOfIssueId!,
+                  onTap: () => _navigateToOriginalIssue(widget.issue.duplicateOfIssueId!),
+                ),
               ),
             SizedBox(height: widget.issue.imageUrl.isNotEmpty ? 12 : 8),
             if (widget.issue.imageUrl.isNotEmpty || widget.issue.evidenceImages.isNotEmpty)

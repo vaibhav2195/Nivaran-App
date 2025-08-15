@@ -9,6 +9,7 @@ import 'dart:developer' as developer;
 import '../../widgets/issue_card.dart'; // Uses IssueCard
 import '../../models/issue_model.dart';
 import '../../services/location_service.dart';
+import '../../utils/location_utils.dart';
 
 class IssuesListScreen extends StatefulWidget {
   const IssuesListScreen({super.key});
@@ -20,7 +21,10 @@ class IssuesListScreen extends StatefulWidget {
 class _IssuesListScreenState extends State<IssuesListScreen> {
   String _currentLocationDisplay = "Nearby";
   bool _isFetchingLocation = false;
+  bool _isProximityFilterEnabled = true; // Default to enabled
   final LocationService _locationService = LocationService();
+  Position? _currentPosition; // Store current position for filtering
+  static const double _proximityRadiusKm = 10.0; // 10km radius for proximity filtering
 
   @override
   void initState() {
@@ -62,6 +66,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
         );
         setState(() {
           _currentLocationDisplay = "All Issues";
+          _isProximityFilterEnabled = false; // Disable proximity filter if no permission
           _isFetchingLocation = false;
         });
       }
@@ -72,6 +77,9 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
       final Position? position = await _locationService.getCurrentPosition(); 
 
       if (position != null) {
+        // Store position for filtering
+        _currentPosition = position;
+        
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
@@ -103,12 +111,18 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             displayAddress = '${displayAddress.substring(0, 27)}...';
           }
 
-          setState(() {
-            _currentLocationDisplay = displayAddress.isNotEmpty ? displayAddress : "Unnamed Area";
-          });
+          if (mounted) {
+            setState(() {
+              _currentLocationDisplay = _isProximityFilterEnabled 
+                  ? "${displayAddress.isNotEmpty ? displayAddress : "Unnamed Area"} (10km radius)"
+                  : displayAddress.isNotEmpty ? displayAddress : "Unnamed Area";
+            });
+          }
         } else if (mounted) {
           setState(() {
-            _currentLocationDisplay = "Current Location"; 
+            _currentLocationDisplay = _isProximityFilterEnabled 
+                ? "Current Location (10km radius)" 
+                : "Current Location";
           });
         }
       } else if (mounted) {
@@ -117,6 +131,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
         );
         setState(() {
           _currentLocationDisplay = "Location Unavailable";
+          _isProximityFilterEnabled = false; // Disable proximity filter if location unavailable
         });
       }
     } catch (e) {
@@ -127,6 +142,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
         );
         setState(() {
           _currentLocationDisplay = "Location Error";
+          _isProximityFilterEnabled = false; // Disable proximity filter on error
         });
       }
     } finally {
@@ -155,6 +171,24 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             ),
           ],
         ),
+        actions: [
+          // Toggle for proximity filter
+          Tooltip(
+            message: _isProximityFilterEnabled ? "Showing issues within 10km" : "Showing all issues",
+            child: Switch(
+              value: _isProximityFilterEnabled,
+              onChanged: (value) {
+                setState(() {
+                  _isProximityFilterEnabled = value;
+                  if (value && _currentPosition == null) {
+                    // If enabling proximity filter but no position, fetch it
+                    _fetchCurrentLocationAndUpdateDisplay();
+                  }
+                });
+              },
+            ),
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -174,14 +208,50 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           }
 
           final issuesDocs = snapshot.data!.docs;
+          final List<Issue> allIssues = issuesDocs.map((doc) {
+            final issueData = doc.data() as Map<String, dynamic>;
+            return Issue.fromFirestore(issueData, doc.id);
+          }).toList();
+          
+          // Apply proximity filter if enabled and location is available
+          List<Issue> displayedIssues = allIssues;
+          if (_isProximityFilterEnabled && _currentPosition != null) {
+            displayedIssues = allIssues.where((issue) {
+              return LocationUtils.isLocationWithinRadius(
+                _currentPosition!.latitude,
+                _currentPosition!.longitude,
+                issue.location.latitude,
+                issue.location.longitude,
+                _proximityRadiusKm
+              );
+            }).toList();
+          }
+          
+          if (displayedIssues.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('No issues found in your area.'),
+                  if (_isProximityFilterEnabled)
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isProximityFilterEnabled = false;
+                        });
+                      },
+                      child: const Text('Show all issues'),
+                    ),
+                ],
+              ),
+            );
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(8.0),
-            itemCount: issuesDocs.length,
+            itemCount: displayedIssues.length,
             itemBuilder: (context, index) {
-              final issueData = issuesDocs[index].data() as Map<String, dynamic>;
-              final issueId = issuesDocs[index].id;
-              final issue = Issue.fromFirestore(issueData, issueId);
+              final issue = displayedIssues[index];
               // Each issue is rendered using IssueCard, which handles image display
               return IssueCard(issue: issue); 
             },
