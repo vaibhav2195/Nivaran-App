@@ -40,6 +40,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // .env file loading removed - using hardcoded values from secrets.dart
+  
   await Firebase.initializeApp(); 
   
   // Set the background messaging handler for FCM

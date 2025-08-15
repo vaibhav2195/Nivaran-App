@@ -1,8 +1,8 @@
 // lib/screens/report/report_details_screen.dart
 import 'dart:io';
-import 'dart:convert';
 import 'dart:async';
-
+import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
@@ -19,8 +19,8 @@ import '../../widgets/auth_button.dart';
 import '../../models/app_user_model.dart';
 import '../../models/category_model.dart';
 import '../../models/issue_model.dart';
-import '../../secrets.dart';
 import 'dart:developer' as developer;
+import '../../secrets.dart';
 
 import '../feed/issue_collaboration_screen.dart';
 
@@ -286,6 +286,41 @@ Respond ONLY with a valid JSON object in this exact format:
 Do not include any other text or formatting.
 """;
 
+    return await _callGeminiApi(prompt, imageBase64);
+  }
+  
+  Future<bool> _checkForDuplicatesWithGemini(String imageBase64, String description) async {
+    // Construct the prompt for duplicate detection
+    final prompt = """You are an expert duplicate issue detector for a civic reporting app.
+    
+Analyze the provided image and description to determine if this is likely a duplicate of an existing issue.
+
+Description: '$description'
+
+Respond with a JSON object containing only a boolean field 'is_duplicate' with value true or false.
+Example: {"is_duplicate": true} or {"is_duplicate": false}
+
+Consider these factors:
+1. Is this a common civic issue that's likely already reported?
+2. Does the description suggest a recent problem that others would notice?
+3. Is this in a high-traffic area where issues are frequently reported?
+
+If you're uncertain, err on the side of marking it as not a duplicate (false).
+""";
+
+    // Call Gemini API
+    final result = await _callGeminiApi(prompt, imageBase64);
+    
+    // Extract the duplicate status
+    if (result != null && result.containsKey('is_duplicate')) {
+      return result['is_duplicate'] as bool;
+    }
+    
+    // Default to false if we couldn't determine
+    return false;
+  }
+  
+  Future<Map<String, dynamic>?> _callGeminiApi(String prompt, String imageBase64) async {
     final payload = {
       "contents": [
         {
@@ -307,10 +342,10 @@ Do not include any other text or formatting.
       }
     };
 
-    developer.log("Sending comprehensive analysis to Gemini", name: "ReportDetailsScreen");
+    developer.log("Sending request to Gemini", name: "ReportDetailsScreen");
 
     try {
-      // Check if geminiApiKey is available
+      // Get geminiApiKey from secrets.dart
       if (geminiApiKey.isEmpty) {
         throw Exception('Gemini API key not configured');
       }
@@ -327,7 +362,7 @@ Do not include any other text or formatting.
 
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
-        developer.log("Gemini Analysis Response: ${response.body}", name: "ReportDetailsScreen");
+        developer.log("Gemini Response: ${response.body}", name: "ReportDetailsScreen");
         
         if (result['candidates'] != null &&
             result['candidates'].isNotEmpty &&
@@ -350,37 +385,41 @@ Do not include any other text or formatting.
             developer.log("Cleaned AI response: $aiResponse", name: "ReportDetailsScreen");
             
             try {
-              final jsonResponse = jsonDecode(aiResponse) as Map<String, dynamic>;
-              
-              // Validate the response structure
-              if (jsonResponse.containsKey('description') && 
-                  jsonResponse.containsKey('category') && 
-                  jsonResponse.containsKey('urgency')) {
-                  
-                // Handle tags if present
-                if (jsonResponse.containsKey('tags')) {
-                  String tags = jsonResponse['tags'].toString();
-                  // Clean up tags if needed
-                  tags = tags.replaceAll(RegExp(r'\[|\]'), '').trim();
-                  _tagsController.text = tags;
-                  developer.log("Tags set from AI: $tags", name: "ReportDetailsScreen");
+                final jsonResponse = jsonDecode(aiResponse) as Map<String, dynamic>;
+                developer.log("Successfully parsed JSON response: $jsonResponse", name: "ReportDetailsScreen");
+                
+                // For issue analysis, validate the response structure
+                if (prompt.contains("description") && prompt.contains("category") && prompt.contains("urgency")) {
+                  if (jsonResponse.containsKey('description') && 
+                      jsonResponse.containsKey('category') && 
+                      jsonResponse.containsKey('urgency')) {
+                      
+                    // Handle tags if present
+                    if (jsonResponse.containsKey('tags')) {
+                      String tags = jsonResponse['tags'].toString();
+                      // Clean up tags if needed
+                      tags = tags.replaceAll(RegExp(r'\[|\]'), '').trim();
+                      _tagsController.text = tags;
+                      developer.log("Tags set from AI: $tags", name: "ReportDetailsScreen");
+                    }
+                    
+                    // Validate urgency value
+                    String urgency = jsonResponse['urgency'].toString();
+                    if (!['Low', 'Medium', 'High'].contains(urgency)) {
+                      developer.log("Invalid urgency value: $urgency, setting to Medium", name: "ReportDetailsScreen");
+                      jsonResponse['urgency'] = 'Medium';
+                    }
+                    
+                    developer.log("Successfully parsed AI analysis: $jsonResponse", name: "ReportDetailsScreen");
+                  } else {
+                    developer.log("Missing required fields in AI response", name: "ReportDetailsScreen");
+                  }
                 }
                 
-                // Validate urgency value
-                String urgency = jsonResponse['urgency'].toString();
-                if (!['Low', 'Medium', 'High'].contains(urgency)) {
-                  developer.log("Invalid urgency value: $urgency, setting to Medium", name: "ReportDetailsScreen");
-                  jsonResponse['urgency'] = 'Medium';
-                }
-                
-                developer.log("Successfully parsed AI analysis: $jsonResponse", name: "ReportDetailsScreen");
                 return jsonResponse;
-              } else {
-                developer.log("Missing required fields in AI response", name: "ReportDetailsScreen");
+              } catch (e) {
+                developer.log("Failed to parse JSON response: $e", name: "ReportDetailsScreen");
               }
-            } catch (e) {
-              developer.log("Failed to parse JSON response: $e", name: "ReportDetailsScreen");
-            }
           } else {
             developer.log("No valid JSON found in response", name: "ReportDetailsScreen");
           }
@@ -410,7 +449,7 @@ Do not include any other text or formatting.
       developer.log("Gemini API timeout", name: "ReportDetailsScreen");
       throw Exception('Request timeout - please try again');
     } catch (e) {
-      developer.log("Error calling Gemini for comprehensive analysis: $e", name: "ReportDetailsScreen");
+      developer.log("Error calling Gemini API: $e", name: "ReportDetailsScreen");
       rethrow;
     } finally {
       if (mounted) {
@@ -450,17 +489,32 @@ Do not include any other text or formatting.
       final imageBytes = await File(widget.imagePath).readAsBytes();
       final base64Image = base64Encode(imageBytes);
 
-      // Call the Cloud Function for duplicate detection
-      final functions = FirebaseFunctions.instance;
-      final callable = functions.httpsCallable('checkForDuplicates');
-      final response = await callable.call<Map<String, dynamic>>({
-        'newImageData': base64Image,
-        'newDescription': _descriptionController.text.trim(),
-      });
-
-      final isDuplicate = response.data['isDuplicate'] as bool;
-      final existingIssueId = response.data['existingIssueId'] as String?;
-      final existingIssueTitle = response.data['existingIssueTitle'] as String?;
+      // Use Gemini API directly for duplicate detection instead of Cloud Function
+      final isDuplicate = await _checkForDuplicatesWithGemini(
+        base64Image, 
+        _descriptionController.text.trim()
+      );
+      
+      // If it's a duplicate, find the most similar issue
+      String? existingIssueId;
+      String? existingIssueTitle;
+      
+      if (isDuplicate) {
+        // Query recent issues to find the most similar one
+        final recentIssues = await FirebaseFirestore.instance
+            .collection('issues')
+            .orderBy('timestamp', descending: true)
+            .limit(10)
+            .get();
+            
+        if (recentIssues.docs.isNotEmpty) {
+          // For simplicity, we'll just use the most recent issue
+          // In a production app, you might want to implement more sophisticated matching
+          final mostRecentIssue = recentIssues.docs.first;
+          existingIssueId = mostRecentIssue.id;
+          existingIssueTitle = mostRecentIssue.data()['title'] as String? ?? 'Untitled Issue';
+        }
+      }
 
       // Handle the response
       if (isDuplicate && existingIssueId != null) {
@@ -495,7 +549,7 @@ Do not include any other text or formatting.
             if (!mounted) return;
             final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
             Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              IssueCollaborationScreen(issueId: existingIssueId, issue: existingIssue)
+              IssueCollaborationScreen(issueId: existingIssueId!, issue: existingIssue)
             ));
           }
         } else {
@@ -578,8 +632,10 @@ Do not include any other text or formatting.
     } catch (e) {
       developer.log('Failed to create new issue: ${e.toString()}', name: 'ReportDetailsScreen', error: e);
       if (mounted) {
+        final errorMsg = e.toString();
+        final endIndex = math.min(100, errorMsg.length);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit report: ${e.toString().substring(0, 100)}...')),
+          SnackBar(content: Text('Failed to submit report: ${errorMsg.substring(0, endIndex)}...')),
         );
       }
     }
@@ -746,7 +802,7 @@ Do not include any other text or formatting.
                       padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: _isDetectingUrgency ? Colors.yellow[50] : (_detectedUrgency == null ? Colors.grey[100] : _getUrgencyColor(_detectedUrgency!).withOpacity(0.1)),
+                        color: _isDetectingUrgency ? Colors.yellow[50] : (_detectedUrgency == null ? Colors.grey[100] : _getUrgencyColor(_detectedUrgency!).withAlpha(26)),
                         borderRadius: BorderRadius.circular(8.0),
                         border: Border.all(
                           color: _isDetectingUrgency ? Colors.orange.shade300 : 

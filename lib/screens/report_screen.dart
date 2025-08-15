@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../secrets.dart';
+import '../services/image_upload_service.dart';
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
 
@@ -100,20 +101,13 @@ Future<void> _initializeCameraAndLocation() async {
     setState(() => _isUploading = true);
 
     try {
-      final url = Uri.parse(
-          'https://api.cloudinary.com/v1_1/$cloudinaryCloudName/image/upload');
-
-      final request = http.MultipartRequest('POST', url)
-        ..fields['upload_preset'] = cloudinaryUploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', _capturedImage!.path));
-
-      final response = await request.send();
-      if (response.statusCode != 200) {
+      // Use ImageUploadService to upload the image to Cloudinary
+      final imageUploadService = ImageUploadService();
+      final imageUrl = await imageUploadService.uploadImage(File(_capturedImage!.path));
+      
+      if (imageUrl == null) {
         throw Exception('Failed to upload image to Cloudinary');
       }
-
-      final responseData = json.decode(await response.stream.bytesToString());
-      final imageUrl = responseData['secure_url'];
 
       String address = '';
       try {

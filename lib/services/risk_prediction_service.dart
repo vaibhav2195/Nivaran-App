@@ -7,8 +7,13 @@ import '../secrets.dart';
 class RiskPredictionService {
  
 
-  static const _endpoint =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$geminiApiKey'; // Replace with your actual API key
+  static String get _endpoint {
+    final apiKey = geminiApiKey;
+    if (apiKey.isEmpty) {
+      throw Exception('GEMINI_API_KEY not found in secrets.dart');
+    }
+    return 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey';
+  }
 
   static Future<String?> getRiskPredictionFromImage(Uint8List imageBytes) async {
     final base64Image = base64Encode(imageBytes);
