@@ -176,7 +176,12 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       // Call comprehensive AI analysis
       Map<String, dynamic>? analysis = await _analyzeIssueWithGemini(imageBase64, locationModel);
       
-      if (analysis != null && mounted) {
+      if (!mounted) {
+        developer.log('Widget not mounted after AI analysis', name: 'ReportDetailsScreen');
+        return;
+      }
+      
+      if (analysis != null) {
         developer.log('AI analysis successful: $analysis', name: 'ReportDetailsScreen');
         
         // Set the AI-generated description (editable by user)
@@ -246,13 +251,16 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       return null;
     }
     
-    if (mounted) {
-      setState(() {
-        _isGeneratingDescription = true;
-        _isSuggestingCategory = true;
-        _isDetectingUrgency = true;
-      });
+    if (!mounted) {
+      developer.log('Widget not mounted before starting analysis', name: 'ReportDetailsScreen');
+      return null;
     }
+    
+    setState(() {
+      _isGeneratingDescription = true;
+      _isSuggestingCategory = true;
+      _isDetectingUrgency = true;
+    });
 
     String locationContext = "Location: ${location.address}. Coordinates: (${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}).";
     
@@ -356,7 +364,10 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
         body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 30));
 
-      if (!mounted) return null;
+      if (!mounted) {
+        developer.log("Widget not mounted after API call, returning null", name: "ReportDetailsScreen");
+        return null;
+      }
 
       developer.log("Gemini API response status: ${response.statusCode}", name: "ReportDetailsScreen");
 
@@ -458,6 +469,8 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
           _isSuggestingCategory = false;
           _isDetectingUrgency = false;
         });
+      } else {
+        developer.log("Widget not mounted in finally block", name: "ReportDetailsScreen");
       }
     }
     
