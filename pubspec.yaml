@@ -61,6 +61,7 @@ dependencies:
   timeago: ^3.6.1
   flutter_slidable: ^3.0.1
   cloud_functions: ^4.7.6
+  cloudinary_public: ^0.23.1
 
 
   # The following adds the Cupertino Icons font to your application.
