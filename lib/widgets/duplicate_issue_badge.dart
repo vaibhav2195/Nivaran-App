@@ -5,10 +5,10 @@ class DuplicateIssueBadge extends StatelessWidget {
   final VoidCallback? onTap;
   
   const DuplicateIssueBadge({
-    Key? key,
+    super.key,
     required this.duplicateOfIssueId,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -52,12 +52,12 @@ class PotentialDuplicateDialog extends StatelessWidget {
   final VoidCallback? onDismiss;
   
   const PotentialDuplicateDialog({
-    Key? key,
+    super.key,
     required this.issueId,
     required this.duplicateOfIssueId,
     this.onConfirm,
     this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

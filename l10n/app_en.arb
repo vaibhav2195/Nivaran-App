@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "chooseYourLanguage": "Choose Your Language",
+  "english": "English",
+  "hindi": "Hindi",
+  "welcomeToNivaran": "Welcome to Nivaran",
+  "iAmA": "I am a...",
+  "citizen": "Citizen",
+  "official": "Official",
+  "letsGetStarted": "Let's Get Started",
+  "login": "Login",
+  "signUp": "Sign Up",
+  "orContinueWith": "or continue with",
+  "loginTitle": "Login to your account",
+  "email": "Email",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "dontHaveAnAccount": "Don't have an account?",
+  "createAccount": "Create Account",
+  "fullName": "Full Name",
+  "confirmPassword": "Confirm Password",
+  "alreadyHaveAnAccount": "Already have an account?"
+}

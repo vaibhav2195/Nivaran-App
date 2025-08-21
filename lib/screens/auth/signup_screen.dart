@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 //import 'package:provider/provider.dart';
 //import '../../services/user_profile_service.dart';
 import '../../widgets/custom_text_field.dart';
@@ -183,20 +184,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.03),
                   Text(
-                    'Create your account', 
+                    AppLocalizations.of(context)!.createAccount,
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.015),
                   Text(
-                    'Sign up with your email', 
+                    'Sign up with your email', // This is not in the localization file
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
                   SizedBox(height: screenHeight * 0.05),
                   CustomTextField(
                     controller: _usernameController,
-                    hintText: 'Username', 
+                    hintText: AppLocalizations.of(context)!.fullName,
                     prefixIconData: Icons.person_outline, 
                     keyboardType: TextInputType.text,
                     textCapitalization: TextCapitalization.words,
@@ -207,7 +208,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _emailController,
-                    hintText: 'Email', 
+                    hintText: AppLocalizations.of(context)!.email,
                     prefixIconData: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
@@ -217,7 +218,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'Password', 
+                    hintText: AppLocalizations.of(context)!.password,
                     obscureText: true,
                     prefixIconData: Icons.lock_outline,
                     validator: _validatePassword,
@@ -227,7 +228,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _confirmPasswordController,
-                    hintText: 'Confirm Password', 
+                    hintText: AppLocalizations.of(context)!.confirmPassword,
                     obscureText: true,
                     prefixIconData: Icons.lock_outline,
                     validator: _validateConfirmPassword,
@@ -236,7 +237,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.05),
                   AuthButton(
-                    text: 'Sign Up', 
+                    text: AppLocalizations.of(context)!.signUp,
                     onPressed: _signUpUser,
                     isLoading: _isLoading,
                   ),
@@ -267,13 +268,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                    Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Already have an account? ", style: TextStyle(color: Colors.grey[700])),
+                      Text("${AppLocalizations.of(context)!.alreadyHaveAnAccount} ", style: TextStyle(color: Colors.grey[700])),
                       GestureDetector(
                         onTap: () {
                            Navigator.pushReplacementNamed(context, '/login');
                         },
                         child: Text(
-                          'Login',
+                          AppLocalizations.of(context)!.login,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.secondary, 
                             fontWeight: FontWeight.bold,

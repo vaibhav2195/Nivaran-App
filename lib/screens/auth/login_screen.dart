@@ -3,7 +3,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+//import '../../l10n/app_localizations_en.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_profile_service.dart';
 import '../../widgets/custom_text_field.dart';
@@ -275,20 +277,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.04),
                   Text(
-                    'Welcome back', // PDF Page 4 Title
+                    AppLocalizations.of(context)!.loginTitle,
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.015),
                   Text(
-                    'Login with your email or Google account', // PDF Page 4 Subtitle
+                    'Login with your email or Google account', // This is not in the localization file
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
                   SizedBox(height: screenHeight * 0.06),
                   CustomTextField(
                     controller: _emailController,
-                    hintText: 'email@domain.com', // PDF Page 5 hint
+                    hintText: AppLocalizations.of(context)!.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
                     focusNode: _emailFocusNode,
@@ -299,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'password', // PDF Page 5 hint
+                    hintText: AppLocalizations.of(context)!.password,
                     obscureText: true,
                     validator: _validatePassword,
                     focusNode: _passwordFocusNode,
@@ -307,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.04),
                   AuthButton(
-                    text: 'Continue', // PDF Page 5 Button ("Continue" or "Login" from Page 4)
+                    text: AppLocalizations.of(context)!.login,
                     onPressed: _loginUser,
                     isLoading: _isLoading,
                   ),
@@ -317,14 +319,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(child: Divider(color: Colors.grey[300])),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text('or', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                        child: Text(AppLocalizations.of(context)!.orContinueWith.split(' ')[0], style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                       ),
                       Expanded(child: Divider(color: Colors.grey[300])),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.03),
                   SocialButton(
-                    text: 'Continue with Google',
+                    text: 'Continue with Google', // This is not in the localization file
                     iconAssetPath: 'assets/icon/google.png', 
                     onPressed: _loginWithGoogle,
                     isLoading: _isLoadingGoogle,
@@ -357,13 +359,13 @@ class _LoginScreenState extends State<LoginScreen> {
                    Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don't have an account? ", style: TextStyle(color: Colors.grey[700])),
+                      Text("${AppLocalizations.of(context)!.dontHaveAnAccount} ", style: TextStyle(color: Colors.grey[700])),
                       GestureDetector(
                         onTap: () {
                           Navigator.pushReplacementNamed(context, '/signup');
                         },
                         child: Text(
-                          'Sign Up',
+                          AppLocalizations.of(context)!.signUp,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.secondary,
                             fontWeight: FontWeight.bold,

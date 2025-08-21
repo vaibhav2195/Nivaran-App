@@ -1,7 +1,8 @@
 // lib/screens/role_selection_screen.dart
 import 'package:flutter/material.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import '../common/app_logo.dart';
-import '../widgets/auth_button.dart'; 
+import '../widgets/auth_button.dart';
 import '../utils/update_checker.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                 SizedBox(height: screenHeight * 0.15), 
                 
                 AuthButton(
-                  text: 'Government Employee',
+                  text: AppLocalizations.of(context)!.official,
                   onPressed: () {
                     Navigator.pushNamed(context, '/auth_options', arguments: 'official');
                   },
@@ -77,7 +78,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                 _buildOrDivider(context),
                 SizedBox(height: screenHeight * 0.015),
                 AuthButton(
-                  text: 'Citizen',
+                  text: AppLocalizations.of(context)!.citizen,
                   onPressed: () {
                     Navigator.pushNamed(context, '/auth_options', arguments: 'citizen');
                   },
@@ -86,7 +87,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                 _buildOrDivider(context),
                 SizedBox(height: screenHeight * 0.015),
                 AuthButton( 
-                  text: 'Public Dashboard',
+                  text: 'Public Dashboard', // This is not in the localization file
       
                   backgroundColor: Colors.grey.shade200,
                   textColor: Colors.black,
@@ -98,7 +99,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                  Padding(
                    padding: const EdgeInsets.only(bottom: 20.0),
                    child: Text(
-                    "NIVARAN - Your Voice, Our Action.",
+                    "NIVARAN - Your Voice, Our Action.", // This is not in the localization file
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                    ),
@@ -118,7 +119,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'or',
+            AppLocalizations.of(context)!.orContinueWith.split(' ')[0], // Hack to get 'or'
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],

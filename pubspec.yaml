@@ -1,5 +1,5 @@
 name: modern_auth_app
-description: "A new Flutter project."
+description: "A new Flutter project." # test
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   firebase_core: ^2.25.0
   firebase_auth: ^4.17.0
   camera: ^0.10.5+9
@@ -49,7 +51,7 @@ dependencies:
   package_info_plus: ^8.3.0
   google_sign_in: ^6.3.0
   fl_chart: ^0.65.0
-  dio: ^5.8.0+1 
+  dio: ^5.8.0+1
   firebase_messaging: 14.9.4
   flutter_local_notifications: ^19.2.1
   flutter_sound: ^9.28.0
@@ -89,6 +91,7 @@ flutter_launcher_icons:
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
+//import '../../l10n/app_localizations_en.dart';
 import '../../common/app_logo.dart';
 import '../../widgets/auth_button.dart';
 
@@ -35,13 +37,13 @@ class AuthOptionsScreen extends StatelessWidget {
               children: <Widget>[
                  SizedBox(height: screenHeight * 0.1),
                 Text(
-                  'Choose your option', // Title from PDF Page 2
+                  AppLocalizations.of(context)!.letsGetStarted,
                   textAlign: TextAlign.center,
                   style: textTheme.headlineMedium?.copyWith(fontSize: 24),
                 ),
                 SizedBox(height: screenHeight * 0.12), 
                 AuthButton(
-                  text: 'Login',
+                  text: AppLocalizations.of(context)!.login,
                   onPressed: () {
                     if (isOfficial) {
                       Navigator.pushNamed(context, '/official_login');
@@ -57,7 +59,7 @@ class AuthOptionsScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Text(
-                          'or',
+                          AppLocalizations.of(context)!.orContinueWith.split(' ')[0],
                           style: TextStyle(color: Colors.grey[500], fontSize: 14),
                         ),
                       ),
@@ -66,7 +68,7 @@ class AuthOptionsScreen extends StatelessWidget {
                   ),
                 SizedBox(height: screenHeight * 0.025),
                 AuthButton(
-                  text: 'Sign up',
+                  text: AppLocalizations.of(context)!.signUp,
                   onPressed: () {
                     if (isOfficial) {
                       Navigator.pushNamed(context, '/official_signup');

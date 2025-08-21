@@ -3,22 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // <-- ADDED
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+//import 'l10n/app_localizations_en.dart';
+import 'services/locale_provider.dart';
+import 'screens/initial_route_manager.dart';
+import 'screens/language_selection_screen.dart';
 import 'services/auth_service.dart';
-import 'services/user_profile_service.dart'; 
+import 'services/user_profile_service.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 import 'screens/role_selection_screen.dart';
 import 'screens/auth/auth_options_screen.dart';
-import 'screens/auth/login_screen.dart';    
-import 'screens/auth/signup_screen.dart';   
-import 'screens/auth/verify_email_screen.dart'; 
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/signup_screen.dart';
+import 'screens/auth/verify_email_screen.dart';
 import 'screens/official/official_login_screen.dart';
 import 'screens/official/official_signup_screen.dart';
 import 'screens/official/official_details_entry_screen.dart';
 import 'screens/official/official_set_password_screen.dart';
-import 'screens/official/official_dashboard_screen.dart'; 
-import 'screens/main_app_scaffold.dart'; 
+import 'screens/official/official_dashboard_screen.dart';
+import 'screens/main_app_scaffold.dart';
 import 'screens/public_dashboard_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/feed/issue_details_screen.dart';
@@ -54,6 +59,7 @@ void main() async {
         Provider<AuthService>(create: (_) => AuthService()),
         ChangeNotifierProvider<UserProfileService>(create: (_) => UserProfileService()),
         Provider<NotificationService>(create: (_) => NotificationService(navigatorKey: navigatorKey)),
+        ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
         ChangeNotifierProxyProvider<UserProfileService, OfflineSyncService>(
           create: (_) => OfflineSyncService(),
           update: (_, userService, offlineService) {
@@ -102,15 +108,16 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
     TextTheme defaultTextTheme = Theme.of(context).textTheme;
     TextTheme appTextTheme = defaultTextTheme.copyWith(
       displayLarge: defaultTextTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
       displayMedium: defaultTextTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
-      headlineMedium: defaultTextTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 26), 
-      headlineSmall: defaultTextTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 22), 
-      titleLarge: defaultTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 20),    
+      headlineMedium: defaultTextTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 26),
+      headlineSmall: defaultTextTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 22),
+      titleLarge: defaultTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 20),
       bodyLarge: defaultTextTheme.bodyLarge?.copyWith(color: Colors.black87, fontSize: 16),
-      bodyMedium: defaultTextTheme.bodyMedium?.copyWith(color: Colors.black54, fontSize: 14), 
+      bodyMedium: defaultTextTheme.bodyMedium?.copyWith(color: Colors.black54, fontSize: 14),
       labelLarge: defaultTextTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.white),
     );
 
@@ -118,13 +125,13 @@ class _MyAppState extends State<MyApp> {
       title: 'Nivaran',
       navigatorKey: navigatorKey, // Assign the global key
       theme: ThemeData(
-        primaryColor: Colors.black, 
+        primaryColor: Colors.black,
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
-          elevation: 0, 
-          iconTheme: const IconThemeData(color: Colors.black, size: 20), 
-          titleTextStyle: appTextTheme.titleLarge?.copyWith(fontSize: 18), 
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black, size: 20),
+          titleTextStyle: appTextTheme.titleLarge?.copyWith(fontSize: 18),
           centerTitle: true,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -132,10 +139,10 @@ class _MyAppState extends State<MyApp> {
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
             textStyle: appTextTheme.labelLarge?.copyWith(letterSpacing: 0.5, color: Colors.white),
-            minimumSize: const Size(double.infinity, 50), 
-            padding: const EdgeInsets.symmetric(vertical: 12), 
+            minimumSize: const Size(double.infinity, 50),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0), 
+              borderRadius: BorderRadius.circular(10.0),
             ),
           ),
         ),
@@ -154,10 +161,10 @@ class _MyAppState extends State<MyApp> {
         inputDecorationTheme: InputDecorationTheme(
            hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
            filled: true,
-           fillColor: Colors.grey[100], 
-           contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0), 
+           fillColor: Colors.grey[100],
+           contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
            border: OutlineInputBorder(
-             borderRadius: BorderRadius.circular(8.0), 
+             borderRadius: BorderRadius.circular(8.0),
              borderSide: BorderSide(color: Colors.grey[300]!, width: 1.0),
            ),
            enabledBorder: OutlineInputBorder(
@@ -166,7 +173,7 @@ class _MyAppState extends State<MyApp> {
            ),
            focusedBorder: OutlineInputBorder(
              borderRadius: BorderRadius.circular(8.0),
-             borderSide: const BorderSide(color: Colors.black, width: 1.5), 
+             borderSide: const BorderSide(color: Colors.black, width: 1.5),
            ),
            errorBorder: OutlineInputBorder(
              borderRadius: BorderRadius.circular(8.0),
@@ -176,27 +183,32 @@ class _MyAppState extends State<MyApp> {
              borderRadius: BorderRadius.circular(8.0),
              borderSide: BorderSide(color: Colors.red.shade600, width: 1.5),
            ),
-           prefixIconColor: Colors.grey[700], 
+           prefixIconColor: Colors.grey[700],
         ),
         textTheme: appTextTheme,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal).copyWith(
-          secondary: Colors.teal, 
+          secondary: Colors.teal,
           surface: Colors.white,
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const InitialAuthCheck(),
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const InitialRouteManager(),
       routes: {
+        '/language_selection': (context) => const LanguageSelectionScreen(),
+        '/initial_auth_check': (context) => const InitialAuthCheck(),
         '/role_selection': (context) => const RoleSelectionScreen(),
         '/auth_options': (context) {
            final args = ModalRoute.of(context)!.settings.arguments as String?;
            return AuthOptionsScreen(userType: args ?? 'citizen');
         },
-        
+
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
-        '/verify_email_screen': (context) => const VerifyEmailScreen(), 
+        '/verify_email_screen': (context) => const VerifyEmailScreen(),
 
         '/official_login': (context) => const OfficialLoginScreen(),
         '/official_signup': (context) => const OfficialSignupScreen(),
@@ -204,7 +216,7 @@ class _MyAppState extends State<MyApp> {
         '/official_set_password': (context) => const OfficialSetPasswordScreen(),
         '/official_dashboard':(context) => const OfficialDashboardScreen(),
 
-        '/app': (context) => const MainAppScaffold(), 
+        '/app': (context) => const MainAppScaffold(),
         '/notifications': (context) => const NotificationsScreen(), // Route for notifications screen
         // Placeholder for issue details, ensure you have this screen or a similar one
         '/issue_details': (context) {
@@ -212,7 +224,7 @@ class _MyAppState extends State<MyApp> {
             // Replace with your actual IssueDetailsScreen, passing the issueId
             return IssueDetailsScreen(issueId: issueId ?? 'error_no_id');
         },
-        
+
         '/public_dashboard': (context) => const PublicDashboardScreen(),
       },
     );

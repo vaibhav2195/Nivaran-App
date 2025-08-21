@@ -6,9 +6,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 // First run: flutter pub add permission_handler
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../secrets.dart';
+//import 'package:http/http.dart' as http;
+//import 'dart:convert';
+//import '../secrets.dart';
 import '../services/image_upload_service.dart';
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});

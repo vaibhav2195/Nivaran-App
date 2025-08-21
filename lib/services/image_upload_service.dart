@@ -1,6 +1,6 @@
 // lib/services/image_upload_service.dart
 import 'dart:io';
-import 'dart:convert';
+//import 'dart:convert';
 // Firebase imports (commented out but kept for future reference)
 // import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 // import 'package:firebase_auth/firebase_auth.dart';

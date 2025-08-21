@@ -1,0 +1,23 @@
+{
+  "@@locale": "hi",
+  "chooseYourLanguage": "अपनी भाषा चुनें",
+  "english": "English",
+  "hindi": "हिंदी",
+  "welcomeToNivaran": "निवारण में आपका स्वागत है",
+  "iAmA": "मैं एक...",
+  "citizen": "नागरिक",
+  "official": "अधिकारी",
+  "letsGetStarted": "चलिए शुरू करते हैं",
+  "login": "लॉग इन करें",
+  "signUp": "साइन अप करें",
+  "orContinueWith": "या इसके साथ जारी रखें",
+  "loginTitle": "अपने खाते में प्रवेश करें",
+  "email": "ईमेल",
+  "password": "पासवर्ड",
+  "forgotPassword": "पासवर्ड भूल गए?",
+  "dontHaveAnAccount": "खाता नहीं है?",
+  "createAccount": "खाता बनाएं",
+  "fullName": "पूरा नाम",
+  "confirmPassword": "पासवर्ड की पुष्टि करें",
+  "alreadyHaveAnAccount": "पहले से ही एक खाता है?"
+}
