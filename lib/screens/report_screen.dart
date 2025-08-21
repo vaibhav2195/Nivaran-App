@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 // First run: flutter pub add permission_handler
@@ -41,14 +42,14 @@ Future<void> _initializeCameraAndLocation() async {
 
   if (cameraStatus != PermissionStatus.granted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Camera permission denied')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.description)),
     );
     return;
   }
 
   if (locationStatus != PermissionStatus.granted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location permission denied')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.description)),
     );
     return;
   }
@@ -93,7 +94,7 @@ Future<void> _initializeCameraAndLocation() async {
     final title = _titleController.text.trim();
     if (_capturedImage == null || _currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please capture photo and enable location')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.description)),
       );
       return;
     }
@@ -141,14 +142,14 @@ Future<void> _initializeCameraAndLocation() async {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Issue reported successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.description)),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error submitting report')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.description)),
         );
       }
     } finally {
@@ -169,7 +170,7 @@ Future<void> _initializeCameraAndLocation() async {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Report an Issue')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.reportAnIssue)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -184,24 +185,24 @@ Future<void> _initializeCameraAndLocation() async {
                   children: [
                     Image.file(File(_capturedImage!.path), height: 150),
                     const SizedBox(height: 8),
-                    const Text('Location:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)!.description,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     Text(
                       _currentAddress != null
                           ? _currentAddress!
                           : _currentPosition != null
                               ? 'Lat: ${_currentPosition!.latitude}, Long: ${_currentPosition!.longitude}'
-                              : 'Location not available',
+                              : AppLocalizations.of(context)!.description,
                     ),
                   ],
                 ),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.title),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Title is required';
+                    return AppLocalizations.of(context)!.description;
                   }
                   return null;
                 },
@@ -214,14 +215,14 @@ Future<void> _initializeCameraAndLocation() async {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _takePicture,
-                            child: const Text('Capture Photo'),
+                            child: Text(AppLocalizations.of(context)!.takePhoto),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _onSubmitPressed,
-                            child: const Text('Submit'),
+                            child: Text(AppLocalizations.of(context)!.submitIssue),
                           ),
                         ),
                       ],

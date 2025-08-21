@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../services/user_profile_service.dart';
 import 'feed/issues_list_screen.dart';
 import 'report/camera_capture_screen.dart';
@@ -144,27 +145,27 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 0 ? Icons.list_alt_rounded : Icons.list_alt_outlined),
-            label: 'Issues',
+            label: AppLocalizations.of(context)!.feed,
           ),
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 1 ? Icons.camera_alt : Icons.camera_alt_outlined),
-            label: 'Report',
+            label: AppLocalizations.of(context)!.report,
           ),
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 2 ? Icons.map : Icons.map_outlined),
-            label: 'Map',
+            label: AppLocalizations.of(context)!.map,
           ),
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 3 ? Icons.notifications : Icons.notifications_outlined),
-            label: 'Alerts',
+            label: AppLocalizations.of(context)!.notifications,
           ),
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 4 ? Icons.bar_chart : Icons.bar_chart_outlined),
-            label: 'Impact',
+            label: AppLocalizations.of(context)!.communityImpact,
           ),
           BottomNavigationBarItem(
             icon: Icon(_selectedIndex == 5 ? Icons.person : Icons.person_outlined),
-            label: 'Profile',
+            label: AppLocalizations.of(context)!.profile,
           ),
         ],
         currentIndex: _selectedIndex,

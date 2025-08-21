@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import '../models/issue_model.dart';
 import '../services/firestore_service.dart';
 import '../screens/full_screen_image_view.dart';
@@ -535,6 +536,7 @@ class _IssueCardState extends State<IssueCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Check if this issue is marked as a duplicate
     final bool isDuplicate = widget.issue.duplicateOfIssueId != null && widget.issue.duplicateOfIssueId!.isNotEmpty;
     final textTheme = Theme.of(context).textTheme;
@@ -696,13 +698,13 @@ class _IssueCardState extends State<IssueCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _ActionChipButton(icon: Icons.arrow_upward_rounded, label: _optimisticUpvotes.toString(), isActive: userHasUpvoted, activeColor: Colors.green.shade600, onTap: () => _handleVote(VoteType.upvote)),
+                _ActionChipButton(icon: Icons.arrow_upward_rounded, label: l10n!.upvoted, isActive: userHasUpvoted, activeColor: Colors.green.shade600, onTap: () => _handleVote(VoteType.upvote)),
                 const SizedBox(width: 8),
                 _ActionChipButton(icon: Icons.arrow_downward_rounded, label: _optimisticDownvotes.toString(), isActive: userHasDownvoted, activeColor: Colors.red.shade600, onTap: () => _handleVote(VoteType.downvote)),
                 const SizedBox(width: 8),
-                _ActionChipButton(icon: Icons.chat_bubble_outline_rounded, label: widget.issue.commentsCount.toString(), onTap: () => showDialog(context: context, builder: (context) => CommentsDialog(issueId: widget.issue.id, issueDescription: widget.issue.description))),
+                _ActionChipButton(icon: Icons.chat_bubble_outline_rounded, label: l10n.comments, onTap: () => showDialog(context: context, builder: (context) => CommentsDialog(issueId: widget.issue.id, issueDescription: widget.issue.description))),
                 const SizedBox(width: 8),
-                _ActionChipButton(icon: Icons.add_circle_outline, label: "Contribute", onTap: () => _navigateToCollaboration()),
+                _ActionChipButton(icon: Icons.add_circle_outline, label: l10n.collaboration, onTap: () => _navigateToCollaboration()),
                 const SizedBox(width: 8),
                 _ActionChipButton(icon: Icons.share_outlined, label: "Share", onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share Issue - Coming Soon!'))))
               ],

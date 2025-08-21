@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import '../../common/app_logo.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/app_user_model.dart';// Keep for potential future use, though not directly used in _signUpOfficial now
 import '../../widgets/auth_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -164,6 +165,7 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -187,20 +189,20 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    'Official Sign up', 
+                    l10n.officialSignUpTitle, 
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Text(
-                    'Enter your details for sign up', 
+                    l10n.enterYourOfficialDetails, 
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
                   SizedBox(height: screenHeight * 0.04),
                   CustomTextField(
                     controller: _fullNameController,
-                    hintText: 'full name', 
+                    hintText: l10n.fullName, 
                     textCapitalization: TextCapitalization.words,
                     validator: _validateFullName,
                     focusNode: _fullNameFocusNode,
@@ -209,7 +211,7 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
                   SizedBox(height: screenHeight * 0.02),
                   CustomTextField(
                     controller: _officialEmailController,
-                    hintText: 'official email',
+                    hintText: l10n.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
                     focusNode: _emailFocusNode,
@@ -228,15 +230,15 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
                   SizedBox(height: screenHeight * 0.02),
                   CustomTextField(
                     controller: _employeeIdController,
-                    hintText: 'employee id',
-                    validator: (val) => _validateNotEmpty(val, "Employee ID"),
+                    hintText: l10n.employeeId,
+                    validator: (val) => _validateNotEmpty(val, l10n.employeeId),
                     focusNode: _employeeIdFocusNode,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'Create Password', 
+                    hintText: l10n.password, 
                     obscureText: true,
                     validator: _validatePassword,
                     focusNode: _passwordFocusNode,
@@ -245,7 +247,7 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
                   SizedBox(height: screenHeight * 0.02),
                   CustomTextField(
                     controller: _confirmPasswordController,
-                    hintText: 'Confirm Password',
+                    hintText: l10n.confirmPassword,
                     obscureText: true,
                     validator: _validateConfirmPassword,
                     focusNode: _confirmPasswordFocusNode,
@@ -253,7 +255,7 @@ class _OfficialSignupScreenState extends State<OfficialSignupScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.04),
                   AuthButton(
-                    text: 'Continue to Details', // Changed button text
+                    text: l10n.signUp,
                     onPressed: _signUpOfficial,
                     isLoading: _isLoading,
                   ),

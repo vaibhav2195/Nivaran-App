@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../common/app_logo.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/auth_button.dart';
 import '../../services/user_profile_service.dart';
@@ -160,6 +161,7 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -180,13 +182,13 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.03),
                   Text(
-                    'Official Details', // Updated Title
+                    l10n.officialSignUpTitle,
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Text(
-                    'Please provide your remaining official information.', // Updated Subtitle
+                    l10n.enterYourOfficialDetails,
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
@@ -203,7 +205,7 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
                       ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator(strokeWidth: 2,)))
                       : DropdownButtonFormField<String>(
                           decoration: InputDecoration(
-                            hintText: 'department', 
+                            hintText: l10n.department, 
                             filled: true,
                             fillColor: Colors.grey[100],
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide(color: Colors.grey[350]!)),
@@ -213,7 +215,7 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
                           ),
                           value: _selectedDepartment,
                           isExpanded: true,
-                          hint: Text('department', style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+                          hint: Text(l10n.department, style: TextStyle(color: Colors.grey[500], fontSize: 15)),
                           items: _fetchedDepartments.map((String department) { 
                             return DropdownMenuItem<String>(
                               value: department,
@@ -225,7 +227,7 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
                               _selectedDepartment = newValue;
                             });
                           },
-                          validator: (value) => value == null ? 'Department is required.' : null,
+                          validator: (value) => value == null ? '${l10n.department} is required.' : null,
                         ),
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
@@ -244,7 +246,7 @@ class _OfficialDetailsEntryScreenState extends State<OfficialDetailsEntryScreen>
                   ),
                   SizedBox(height: screenHeight * 0.05),
                   AuthButton(
-                    text: 'Submit & Verify Email', // Updated Button Text
+                    text: l10n.submit,
                     onPressed: _isLoadingDepartments ? null : _submitOfficialDetails, 
                     isLoading: _isLoading,
                   ),

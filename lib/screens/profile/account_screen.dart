@@ -1,6 +1,7 @@
 // lib/screens/profile/account_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_profile_service.dart';
 import '../../models/app_user_model.dart';
@@ -13,17 +14,17 @@ class AccountScreen extends StatelessWidget {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text('Are you sure you want to log out?'),
+          title: Text(AppLocalizations.of(context)!.logout),
+          content: Text(AppLocalizations.of(context)!.description),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
               onPressed: () {
                 Navigator.of(dialogContext).pop(false); // Dismiss dialog, return false
               },
             ),
             TextButton(
-              child: const Text('Logout', style: TextStyle(color: Colors.red)),
+              child: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red)),
               onPressed: () {
                 Navigator.of(dialogContext).pop(true); // Dismiss dialog, return true
               },
@@ -67,24 +68,24 @@ class AccountScreen extends StatelessWidget {
 
     if (userProfileService.isLoadingProfile && currentUserProfile == null) {
       return Scaffold(
-          appBar: AppBar(title: const Text('Account')),
-          body: const Center(child: CircularProgressIndicator(semanticsLabel: "Loading profile...",)));
+          appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
+          body: Center(child: CircularProgressIndicator(semanticsLabel: AppLocalizations.of(context)!.profile)));
     }
 
     if (currentUserProfile == null) {
       return Scaffold(
-          appBar: AppBar(title: const Text('Account')),
+          appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('User profile not available.'),
+                Text(AppLocalizations.of(context)!.description),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
                   },
-                  child: const Text('Go to Login/Signup'),
+                  child: Text(AppLocalizations.of(context)!.login),
                 )
               ],
             ),
@@ -98,7 +99,7 @@ class AccountScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account'),
+        title: Text(AppLocalizations.of(context)!.account),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
@@ -161,11 +162,11 @@ class AccountScreen extends StatelessWidget {
           const SizedBox(height: 10),
 
           if (isOfficial) ...[
-            _buildSectionTitle(context, "Official Tools"),
+            _buildSectionTitle(context, AppLocalizations.of(context)!.officialDashboard),
             _buildListTile(
               context: context,
               icon: Icons.dashboard_customize_outlined,
-              title: 'Department Dashboard',
+              title: AppLocalizations.of(context)!.officialDashboard,
               onTap: () {
                 Navigator.pushNamed(context, '/official_dashboard');
               }
@@ -174,22 +175,22 @@ class AccountScreen extends StatelessWidget {
             const SizedBox(height: 10),
           ],
 
-          _buildSectionTitle(context, "My Activity"),
+          _buildSectionTitle(context, AppLocalizations.of(context)!.myIssues),
           _buildListTile(
             context: context,
             icon: Icons.list_alt_outlined,
-            title: 'My Reported Issues',
+            title: AppLocalizations.of(context)!.myIssues,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("My Issues - Coming Soon!")));
             }
           ),
 
           const SizedBox(height: 10),
-          _buildSectionTitle(context, "Support & Settings"),
+          _buildSectionTitle(context, AppLocalizations.of(context)!.settings),
           _buildListTile(
             context: context,
             icon: Icons.notifications_active_outlined,
-            title: 'Notifications',
+            title: AppLocalizations.of(context)!.notifications,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Notifications - Coming Soon!")));
             }
@@ -197,7 +198,7 @@ class AccountScreen extends StatelessWidget {
           _buildListTile(
             context: context,
             icon: Icons.help_outline_rounded,
-            title: 'Help & Support',
+            title: AppLocalizations.of(context)!.settings,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Help & Support - Coming Soon!")));
             }
@@ -205,7 +206,7 @@ class AccountScreen extends StatelessWidget {
           _buildListTile(
             context: context,
             icon: Icons.settings_outlined,
-            title: 'App Settings',
+            title: AppLocalizations.of(context)!.settings,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App Settings - Coming Soon!")));
             }
@@ -216,7 +217,7 @@ class AccountScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: Colors.red),
-              label: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
+              label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Colors.red.shade300),
                 minimumSize: const Size(double.infinity, 50),

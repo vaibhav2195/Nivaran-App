@@ -1,6 +1,7 @@
 // lib/screens/official/official_set_password_screen.dart
 import 'package:flutter/material.dart';
 import '../../common/app_logo.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/auth_button.dart';
 
@@ -48,12 +49,14 @@ class _OfficialSetPasswordScreenState extends State<OfficialSetPasswordScreen> {
   }
 
    String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter a new password.';
-    if (value.length < 6) return 'Password must be at least 6 characters long.';
+    final l10n = AppLocalizations.of(context)!;
+    if (value == null || value.isEmpty) return l10n.passwordRequirement;
+    if (value.length < 6) return l10n.passwordRequirement;
     return null;
   }
 
   String? _validateConfirmPassword(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return 'Please confirm your new password.';
     if (value != _passwordController.text) return 'Passwords do not match.';
     return null;
@@ -64,6 +67,7 @@ class _OfficialSetPasswordScreenState extends State<OfficialSetPasswordScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -87,20 +91,20 @@ class _OfficialSetPasswordScreenState extends State<OfficialSetPasswordScreen> {
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.05),
                   Text(
-                    'Password', // PDF Page 8 Title
+                    l10n.setYourPassword,
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Text(
-                    'Set your password', // PDF Page 8 Subtitle
+                    l10n.passwordRequirement,
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
                   SizedBox(height: screenHeight * 0.06),
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'new password', // Matches PDF placeholder
+                    hintText: l10n.password,
                     obscureText: true,
                     validator: _validatePassword,
                     onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
@@ -108,14 +112,14 @@ class _OfficialSetPasswordScreenState extends State<OfficialSetPasswordScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _confirmPasswordController,
-                    hintText: 'confirm new password', // Matches PDF placeholder
+                    hintText: l10n.confirmPassword,
                     obscureText: true,
                     validator: _validateConfirmPassword,
                     onFieldSubmitted: (_) => _submitNewPassword(),
                   ),
                   SizedBox(height: screenHeight * 0.05),
                   AuthButton(
-                    text: 'Submit', // Matches PDF
+                    text: l10n.confirm,
                     onPressed: _submitNewPassword,
                     isLoading: _isLoading,
                   ),

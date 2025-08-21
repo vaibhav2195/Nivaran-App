@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import '../models/issue_model.dart';
 
 class IssueTimelineWidget extends StatelessWidget {
@@ -16,14 +17,15 @@ class IssueTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text(
-            'Resolution Timeline',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            l10n!.timeline,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         if (statusUpdates.isEmpty)
@@ -79,8 +81,8 @@ class IssueTimelineWidget extends StatelessWidget {
                             DateFormat('MMM dd, yyyy - hh:mm a').format(timestamp.toDate()),
                             style: TextStyle(color: Colors.grey[600], fontSize: 12),
                           ),
-                          Text('Updated by: $updatedBy'),
-                          if (comments.isNotEmpty) ...[  
+                          Text('${l10n.status}: $updatedBy'),
+                          if (comments.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(comments),
                           ],

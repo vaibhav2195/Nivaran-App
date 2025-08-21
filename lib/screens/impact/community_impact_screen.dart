@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../models/issue_model.dart';
 import 'dart:developer' as developer;
@@ -56,7 +57,7 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
       developer.log('Error fetching impact data: ${e.toString()}', name: 'CommunityImpactScreen');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error loading impact data. Please try again.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.description)),
         );
       }
     } finally {
@@ -112,13 +113,13 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community Impact'),
+        title: Text(AppLocalizations.of(context)!.communityImpact),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Categories'),
-            Tab(text: 'Trends'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.description),
+            Tab(text: AppLocalizations.of(context)!.category),
+            Tab(text: AppLocalizations.of(context)!.description),
           ],
         ),
       ),
@@ -142,31 +143,31 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildImpactCard(
-            title: 'Total Issues Reported',
+            title: AppLocalizations.of(context)!.myIssues,
             value: _totalReportedIssues.toString(),
             icon: Icons.report_problem_outlined,
             color: Colors.blue,
           ),
           const SizedBox(height: 16),
           _buildImpactCard(
-            title: 'Issues Resolved',
+            title: AppLocalizations.of(context)!.myIssues,
             value: _totalResolvedIssues.toString(),
             subtitle: _totalReportedIssues > 0
                 ? '${(_totalResolvedIssues / _totalReportedIssues * 100).toStringAsFixed(1)}% resolution rate'
-                : 'No issues reported yet',
+                : AppLocalizations.of(context)!.description,
             icon: Icons.check_circle_outline,
             color: Colors.green,
           ),
           const SizedBox(height: 16),
           _buildImpactCard(
-            title: 'People Impacted',
+            title: AppLocalizations.of(context)!.communityImpact,
             value: _totalAffectedUsers.toString(),
             icon: Icons.people_outline,
             color: Colors.purple,
           ),
           const SizedBox(height: 16),
           _buildImpactCard(
-            title: 'Avg. Resolution Time',
+            title: AppLocalizations.of(context)!.description,
             value: _averageResolutionTime > 0
                 ? _averageResolutionTime < 24
                     ? '${_averageResolutionTime.toStringAsFixed(1)} hours'
@@ -176,9 +177,9 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
             color: Colors.orange,
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Status Distribution',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.statistics,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           _buildStatusDistributionChart(),
@@ -193,9 +194,9 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Issues by Category',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.myIssues,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -203,9 +204,9 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
             child: _buildCategoryPieChart(),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Category Breakdown',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.category,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           ..._issuesByCategory.entries.map((entry) {
@@ -239,9 +240,9 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Monthly Reporting Trends',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.description,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -249,9 +250,9 @@ class _CommunityImpactScreenState extends State<CommunityImpactScreen> with Sing
             child: _buildMonthlyTrendsChart(sortedMonths),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Monthly Breakdown',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.description,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           ...sortedMonths.map((month) {

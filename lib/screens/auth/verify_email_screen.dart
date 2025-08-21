@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../common/app_logo.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_profile_service.dart';
 import '../../widgets/auth_button.dart';
@@ -142,6 +143,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final User? currentUser = _auth.currentUser;
     final String userEmail = currentUser?.email ?? "your email address";
     final screenHeight = MediaQuery.of(context).size.height;
@@ -167,13 +169,13 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 Icon(Icons.mark_email_read_outlined, size: screenWidth * 0.25, color: Theme.of(context).primaryColor),
                 SizedBox(height: screenHeight * 0.03),
                 Text(
-                  'Verify Your Email',
+                  l10n.verifyYourEmail,
                   textAlign: TextAlign.center,
                   style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                 ),
                 SizedBox(height: screenHeight * 0.015),
                 Text(
-                  'We\'ve sent a verification link to\n$userEmail.\nPlease check your inbox (and spam folder) and click the link to activate your account.',
+                  l10n.verificationEmailSent,
                   textAlign: TextAlign.center,
                   style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[700], height: 1.5),
                 ),
@@ -188,7 +190,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   icon: _isSendingVerification 
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                         : Icon(Icons.outgoing_mail, color: Theme.of(context).colorScheme.secondary),
-                  label: Text('Resend Verification Email', style: TextStyle(color: Theme.of(context).colorScheme.secondary)),
+                  label: Text(l10n.resendEmail, style: TextStyle(color: Theme.of(context).colorScheme.secondary)),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Theme.of(context).colorScheme.secondary.withAlpha(150)),
                      minimumSize: const Size(double.infinity, 50),
@@ -199,7 +201,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 TextButton(
                   onPressed: _logoutAndGoToRoleSelection,
                   child: Text(
-                    'Use a different email or go back',
+                    l10n.cancel,
                     style: TextStyle(color: Colors.grey[600], decoration: TextDecoration.underline),
                   ),
                 ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_profile_service.dart';
 import '../../widgets/custom_text_field.dart';
@@ -178,6 +179,7 @@ class _OfficialLoginScreenState extends State<OfficialLoginScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -201,20 +203,20 @@ class _OfficialLoginScreenState extends State<OfficialLoginScreen> {
                 children: <Widget>[
                   SizedBox(height: screenHeight * 0.04),
                   Text(
-                    'Login', // PDF Page 5 ("Login")
+                    l10n.officialLoginTitle,
                     textAlign: TextAlign.center,
                     style: textTheme.headlineMedium?.copyWith(fontSize: 26),
                   ),
                   SizedBox(height: screenHeight * 0.015),
                   Text(
-                    'Enter your email to sign in for this app', // PDF Page 5 subtitle
+                    l10n.loginTitle,
                     textAlign: TextAlign.center,
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15, color: Colors.grey[600]),
                   ),
                   SizedBox(height: screenHeight * 0.06),
                   CustomTextField(
                     controller: _emailController,
-                    hintText: 'email@domain.com',
+                    hintText: l10n.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
                     focusNode: _emailFocusNode,
@@ -223,7 +225,7 @@ class _OfficialLoginScreenState extends State<OfficialLoginScreen> {
                   SizedBox(height: screenHeight * 0.025),
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'password',
+                    hintText: l10n.password,
                     obscureText: true,
                     validator: _validatePassword,
                     focusNode: _passwordFocusNode,
@@ -231,7 +233,7 @@ class _OfficialLoginScreenState extends State<OfficialLoginScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.04),
                   AuthButton(
-                    text: 'Continue',
+                    text: l10n.login,
                     onPressed: _loginOfficial,
                     isLoading: _isLoading,
                   ),
@@ -241,15 +243,15 @@ class _OfficialLoginScreenState extends State<OfficialLoginScreen> {
                       Expanded(child: Divider(color: Colors.grey[300])),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text('or', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                        child: Text(l10n.orContinueWith, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                       ),
                       Expanded(child: Divider(color: Colors.grey[300])),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.03),
                   SocialButton(
-                    text: 'Continue with Google',
-                    iconAssetPath: 'assets/icon/google.png', 
+                    text: l10n.signUp,
+                    iconAssetPath: 'assets/icon/google.png',
                     onPressed: _loginWithGoogleOfficial,
                     isLoading: _isLoadingGoogle,
                   ),

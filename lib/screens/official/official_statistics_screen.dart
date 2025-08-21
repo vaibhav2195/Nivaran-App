@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../services/user_profile_service.dart';
 import '../../models/issue_model.dart'; // Import Issue model for type safety
@@ -18,15 +19,15 @@ class OfficialStatisticsScreen extends StatelessWidget {
     if (department == null || department.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Department Statistics'),
+          title: Text(AppLocalizations.of(context)!.statistics),
         ),
-        body: const Center(
+        body: Center(
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Your account is not assigned to a department. Cannot display statistics.',
+              AppLocalizations.of(context)!.description,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.redAccent),
+              style: const TextStyle(fontSize: 16, color: Colors.redAccent),
             ),
           ),
         ),
@@ -35,7 +36,7 @@ class OfficialStatisticsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Department Statistics'),
+        title: Text(AppLocalizations.of(context)!.statistics),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -49,12 +50,12 @@ class OfficialStatisticsScreen extends StatelessWidget {
 
           if (snapshot.hasError) {
             developer.log("Error fetching stats: ${snapshot.error}", name: "OfficialStatisticsScreen");
-            return Center(child: Text('Error loading statistics: ${snapshot.error}'));
+            return Center(child: Text('${AppLocalizations.of(context)!.description}: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
-              child: Text('No issues found for $department department.'),
+              child: Text('${AppLocalizations.of(context)!.description} $department department.'),
             );
           }
 
@@ -105,16 +106,16 @@ class OfficialStatisticsScreen extends StatelessWidget {
 
           if (displayedTotalForPie > 0) { 
             if (acknowledgedCount > 0) {
-               pieSections.add(_buildPieSection(acknowledgedCount.toDouble(), 'Acknowledged', Colors.lightBlue.shade300, context, displayedTotalForPie));
+               pieSections.add(_buildPieSection(acknowledgedCount.toDouble(), AppLocalizations.of(context)!.title, Colors.lightBlue.shade300, context, displayedTotalForPie));
             }
             if (inProgressCount > 0) {
-               pieSections.add(_buildPieSection(inProgressCount.toDouble(), 'In Progress', Colors.orange.shade400, context, displayedTotalForPie));
+               pieSections.add(_buildPieSection(inProgressCount.toDouble(), AppLocalizations.of(context)!.home, Colors.orange.shade400, context, displayedTotalForPie));
             }
             if (resolvedCount > 0) {
-              pieSections.add(_buildPieSection(resolvedCount.toDouble(), 'Resolved', Colors.green.shade400, context, displayedTotalForPie));
+              pieSections.add(_buildPieSection(resolvedCount.toDouble(), AppLocalizations.of(context)!.submitIssue, Colors.green.shade400, context, displayedTotalForPie));
             }
             if (rejectedCount > 0) {
-              pieSections.add(_buildPieSection(rejectedCount.toDouble(), 'Rejected', Colors.red.shade300, context, displayedTotalForPie));
+              pieSections.add(_buildPieSection(rejectedCount.toDouble(), AppLocalizations.of(context)!.logout, Colors.red.shade300, context, displayedTotalForPie));
             }
           }
           
@@ -144,7 +145,7 @@ class OfficialStatisticsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Total Assigned Issues: $totalIssues', // This still reflects ALL issues
+                          '${AppLocalizations.of(context)!.myIssues}: $totalIssues', // This still reflects ALL issues
                           style: Theme.of(context).textTheme.titleMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -162,15 +163,15 @@ class OfficialStatisticsScreen extends StatelessWidget {
                   mainAxisSpacing: 12,
                   children: [
                     // Only display the 4 requested status cards
-                    _buildStatusCard(context, 'Acknowledged', acknowledgedCount, Icons.visibility_outlined, Colors.lightBlue.shade500),
-                    _buildStatusCard(context, 'In Progress', inProgressCount, Icons.hourglass_top_rounded, Colors.orange.shade700),
-                    _buildStatusCard(context, 'Resolved', resolvedCount, Icons.check_circle_outline, Colors.green.shade600),
-                    _buildStatusCard(context, 'Rejected', rejectedCount, Icons.cancel_outlined, Colors.red.shade600),
+                    _buildStatusCard(context, AppLocalizations.of(context)!.title, acknowledgedCount, Icons.visibility_outlined, Colors.lightBlue.shade500),
+                    _buildStatusCard(context, AppLocalizations.of(context)!.home, inProgressCount, Icons.hourglass_top_rounded, Colors.orange.shade700),
+                    _buildStatusCard(context, AppLocalizations.of(context)!.submitIssue, resolvedCount, Icons.check_circle_outline, Colors.green.shade600),
+                    _buildStatusCard(context, AppLocalizations.of(context)!.logout, rejectedCount, Icons.cancel_outlined, Colors.red.shade600),
                   ],
                 ),
                 const SizedBox(height: 32),
                 if (pieSections.isNotEmpty) ...[ // Only show pie chart if there's data for the 4 categories
-                  Text("Issue Status Distribution (Active & Closed)", style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+                  Text(AppLocalizations.of(context)!.statistics, style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 280, 
@@ -194,17 +195,17 @@ class OfficialStatisticsScreen extends StatelessWidget {
                     runSpacing: 8.0, 
                     children: [
                       // Legend for the 4 displayed statuses
-                      if (acknowledgedCount > 0) _buildLegendItem('Acknowledged', Colors.lightBlue.shade300),
-                      if (inProgressCount > 0) _buildLegendItem('In Progress', Colors.orange.shade400),
-                      if (resolvedCount > 0) _buildLegendItem('Resolved', Colors.green.shade400),
-                      if (rejectedCount > 0) _buildLegendItem('Rejected', Colors.red.shade300),
+                      if (acknowledgedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.title, Colors.lightBlue.shade300),
+                      if (inProgressCount > 0) _buildLegendItem(AppLocalizations.of(context)!.home, Colors.orange.shade400),
+                      if (resolvedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.submitIssue, Colors.green.shade400),
+                      if (rejectedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.logout, Colors.red.shade300),
                     ],
                   ),
                 ] else if (totalIssues > 0) ...[ // If no data for the 4 categories, but other issues exist
                    Padding(
                      padding: const EdgeInsets.symmetric(vertical: 20.0),
                      child: Text(
-                        "No issues currently in 'Acknowledged', 'In Progress', 'Resolved', or 'Rejected' states.", 
+                        AppLocalizations.of(context)!.description,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[700]), 
                         textAlign: TextAlign.center
                       ),

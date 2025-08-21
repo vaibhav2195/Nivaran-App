@@ -3,6 +3,7 @@ import 'dart:async'; // Added for StreamSubscription
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/user_profile_service.dart';
 import '../../utils/update_checker.dart';
 import '../../models/issue_model.dart';
@@ -754,14 +755,14 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
       appBar: AppBar(
         title: Text(
           _departmentName == "Not Assigned" || _departmentName == "Loading..." || _departmentName == "Access Denied"
-              ? "Official Dashboard"
-              : '$_departmentName Issues',
+              ? AppLocalizations.of(context)!.officialDashboard
+              : '$_departmentName ${AppLocalizations.of(context)!.myIssues}',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.filter_list_alt), tooltip: 'Filter Issues', onPressed: _showFilterDialog),
-          IconButton(icon: const Icon(Icons.sort_by_alpha_rounded), tooltip: 'Sort Issues', onPressed: _showSortOptions),
-          IconButton(icon: const Icon(Icons.logout_outlined), tooltip: 'Logout', onPressed: () async {
+          IconButton(icon: const Icon(Icons.filter_list_alt), tooltip: AppLocalizations.of(context)!.myIssues, onPressed: _showFilterDialog),
+          IconButton(icon: const Icon(Icons.sort_by_alpha_rounded), tooltip: AppLocalizations.of(context)!.myIssues, onPressed: _showSortOptions),
+          IconButton(icon: const Icon(Icons.logout_outlined), tooltip: AppLocalizations.of(context)!.logout, onPressed: () async {
              await authService.signOut(context);
           }),
         ],
@@ -778,8 +779,8 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey[600],
         items: [
-          BottomNavigationBarItem(icon: Icon(_selectedIndex == 0 ? Icons.list_alt_rounded : Icons.list_alt_outlined), label: 'Issues'),
-          BottomNavigationBarItem(icon: Icon(_selectedIndex == 1 ? Icons.bar_chart_rounded : Icons.bar_chart_outlined), label: 'Stats'),
+          BottomNavigationBarItem(icon: Icon(_selectedIndex == 0 ? Icons.list_alt_rounded : Icons.list_alt_outlined), label: AppLocalizations.of(context)!.myIssues),
+          BottomNavigationBarItem(icon: Icon(_selectedIndex == 1 ? Icons.bar_chart_rounded : Icons.bar_chart_outlined), label: AppLocalizations.of(context)!.statistics),
           BottomNavigationBarItem(
             icon: Stack(
               clipBehavior: Clip.none,
@@ -797,9 +798,9 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
                   ),
               ],
             ),
-            label: 'Alerts',
+            label: AppLocalizations.of(context)!.notifications,
           ),
-          BottomNavigationBarItem(icon: Icon(_selectedIndex == 3 ? Icons.account_circle : Icons.account_circle_outlined), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(_selectedIndex == 3 ? Icons.account_circle : Icons.account_circle_outlined), label: AppLocalizations.of(context)!.profile),
         ],
       ),
     );

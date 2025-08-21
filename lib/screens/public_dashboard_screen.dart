@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart'; // Add this import for pie chart
+import '../l10n/app_localizations.dart';
 import '../../models/issue_model.dart'; // Add this import for Issue model
 import 'dart:developer' as developer; // For logging
 import '../services/predictive_maintenance_service.dart';
@@ -16,7 +17,7 @@ class PublicDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Public Dashboard'),
+        title: Text(AppLocalizations.of(context)!.publicDashboard),
         centerTitle: true,
         // Adding a back button if this screen is pushed onto the stack
         leading: Navigator.canPop(context)
@@ -123,11 +124,11 @@ class PublicDashboardScreen extends StatelessWidget {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            _buildStatusCard(context, 'Total Reported', totalReported, Icons.flag_outlined, Colors.blue.shade600),
-            _buildStatusCard(context, 'Total Resolved', resolvedCount, Icons.check_circle_outline, Colors.green.shade600),
-            _buildStatusCard(context, 'Currently Pending', pendingCount, Icons.hourglass_empty_outlined, Colors.orange.shade600),
-            _buildStatusCard(context, 'Acknowledged', acknowledgedCount, Icons.visibility_outlined, Colors.lightBlue.shade500),
-            _buildStatusCard(context, 'Total Rejected', rejectedCount, Icons.cancel_outlined, Colors.red.shade600),
+            _buildStatusCard(context, AppLocalizations.of(context)!.report, totalReported, Icons.flag_outlined, Colors.blue.shade600),
+            _buildStatusCard(context, AppLocalizations.of(context)!.submitIssue, resolvedCount, Icons.check_circle_outline, Colors.green.shade600),
+            _buildStatusCard(context, AppLocalizations.of(context)!.home, pendingCount, Icons.hourglass_empty_outlined, Colors.orange.shade600),
+            _buildStatusCard(context, AppLocalizations.of(context)!.title, acknowledgedCount, Icons.visibility_outlined, Colors.lightBlue.shade500),
+            _buildStatusCard(context, AppLocalizations.of(context)!.logout, rejectedCount, Icons.cancel_outlined, Colors.red.shade600),
           ],
         );
       },
@@ -242,7 +243,7 @@ class PublicDashboardScreen extends StatelessWidget {
         return Column(
           children: [
             Text(
-              "Issue Status Distribution", 
+              AppLocalizations.of(context)!.statistics,
               style: textTheme.titleLarge, 
               textAlign: TextAlign.center
             ),
@@ -268,11 +269,11 @@ class PublicDashboardScreen extends StatelessWidget {
               spacing: 16.0,
               runSpacing: 8.0,
               children: [
-                if (reportedCount > 0) _buildLegendItem('Reported', Colors.blue.shade400),
-                if (acknowledgedCount > 0) _buildLegendItem('Acknowledged', Colors.lightBlue.shade300),
-                if (inProgressCount > 0) _buildLegendItem('Pending', Colors.orange.shade400),
-                if (resolvedCount > 0) _buildLegendItem('Solved', Colors.green.shade400),
-                if (rejectedCount > 0) _buildLegendItem('Rejected', Colors.red.shade300),
+                if (reportedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.report, Colors.blue.shade400),
+                if (acknowledgedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.title, Colors.lightBlue.shade300),
+                if (inProgressCount > 0) _buildLegendItem(AppLocalizations.of(context)!.home, Colors.orange.shade400),
+                if (resolvedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.submitIssue, Colors.green.shade400),
+                if (rejectedCount > 0) _buildLegendItem(AppLocalizations.of(context)!.logout, Colors.red.shade300),
               ],
             ),
           ],
@@ -374,7 +375,7 @@ class PublicDashboardScreen extends StatelessWidget {
               ),
               title: Text(name, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               subtitle: Text(
-                'Department: $department\nAvg. Resolution Time: $avgResolutionTime',
+                '${AppLocalizations.of(context)!.description}: $department\nAvg. Resolution Time: $avgResolutionTime',
                 style: textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
               ),
               trailing: Column(
@@ -392,7 +393,7 @@ class PublicDashboardScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text('Satisfaction', style: textTheme.bodySmall),
+                  Text(AppLocalizations.of(context)!.communityImpact, style: textTheme.bodySmall),
                 ],
               ),
               isThreeLine: true,

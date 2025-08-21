@@ -4,7 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
-import 'dart:developer' as developer; 
+import 'dart:developer' as developer;
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 
 import '../../widgets/issue_card.dart'; // Uses IssueCard
 import '../../models/issue_model.dart';
@@ -51,12 +52,13 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
 
   Future<void> _fetchCurrentLocationAndUpdateDisplay() async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isFetchingLocation = true;
-      _currentLocationDisplay = "Fetching location..."; 
+      _currentLocationDisplay = "Fetching location...";
     });
 
-    await _requestLocationPermission(); 
+    await _requestLocationPermission();
 
     var status = await Permission.locationWhenInUse.status;
     if (!status.isGranted) {
@@ -74,12 +76,12 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
     }
 
     try {
-      final Position? position = await _locationService.getCurrentPosition(); 
+      final Position? position = await _locationService.getCurrentPosition();
 
       if (position != null) {
         // Store position for filtering
         _currentPosition = position;
-        
+
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
@@ -94,7 +96,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           } else if (place.thoroughfare != null && place.thoroughfare!.isNotEmpty) {
             displayAddress += place.thoroughfare!;
           }
-          
+
           if (place.subLocality != null && place.subLocality!.isNotEmpty) {
             if (displayAddress.isNotEmpty) displayAddress += ", ";
             displayAddress += place.subLocality!;
@@ -103,26 +105,26 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             displayAddress += place.locality!;
           }
 
-          if (displayAddress.isEmpty) { 
-            displayAddress = place.locality ?? place.administrativeArea ?? "Current Location";
+          if (displayAddress.isEmpty) {
+            displayAddress = place.locality ?? place.administrativeArea ?? l10n!.location;
           }
-          
+
           if (displayAddress.length > 30) {
             displayAddress = '${displayAddress.substring(0, 27)}...';
           }
 
           if (mounted) {
             setState(() {
-              _currentLocationDisplay = _isProximityFilterEnabled 
+              _currentLocationDisplay = _isProximityFilterEnabled
                   ? "${displayAddress.isNotEmpty ? displayAddress : "Unnamed Area"} (10km radius)"
                   : displayAddress.isNotEmpty ? displayAddress : "Unnamed Area";
             });
           }
         } else if (mounted) {
           setState(() {
-            _currentLocationDisplay = _isProximityFilterEnabled 
-                ? "Current Location (10km radius)" 
-                : "Current Location";
+            _currentLocationDisplay = _isProximityFilterEnabled
+                ? "Current Location (10km radius)"
+                : l10n!.location;
           });
         }
       } else if (mounted) {
@@ -156,6 +158,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -164,7 +167,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _isFetchingLocation ? "Updating location..." : _currentLocationDisplay,
+                _isFetchingLocation ? l10n!.location : _currentLocationDisplay,
                 style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -201,7 +204,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           }
           if (snapshot.hasError) {
             developer.log('Firestore Error: ${snapshot.error}', name: 'IssuesListScreen');
-            return const Center(child: Text('Error loading issues. Please try again.'));
+            return Center(child: Text(l10n!.issueDetails));
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text('No issues reported yet. Be the first!'));
@@ -212,7 +215,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             final issueData = doc.data() as Map<String, dynamic>;
             return Issue.fromFirestore(issueData, doc.id);
           }).toList();
-          
+
           // Apply proximity filter if enabled and location is available
           List<Issue> displayedIssues = allIssues;
           if (_isProximityFilterEnabled && _currentPosition != null) {
@@ -226,7 +229,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
               );
             }).toList();
           }
-          
+
           if (displayedIssues.isEmpty) {
             return Center(
               child: Column(
@@ -240,7 +243,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
                           _isProximityFilterEnabled = false;
                         });
                       },
-                      child: const Text('Show all issues'),
+                      child: Text(l10n!.issuesFeed),
                     ),
                 ],
               ),
@@ -253,7 +256,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             itemBuilder: (context, index) {
               final issue = displayedIssues[index];
               // Each issue is rendered using IssueCard, which handles image display
-              return IssueCard(issue: issue); 
+              return IssueCard(issue: issue);
             },
           );
         },

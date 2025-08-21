@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import '../models/comment_model.dart';
 import '../services/firestore_service.dart';
 
@@ -67,6 +68,7 @@ class _CommentsDialogState extends State<CommentsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       child: Container(
         width: double.maxFinite,
@@ -76,7 +78,7 @@ class _CommentsDialogState extends State<CommentsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Comments',
+              l10n!.comments,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -137,10 +139,10 @@ class _CommentsDialogState extends State<CommentsDialog> {
                   Expanded(
                     child: TextField(
                       controller: _commentController,
-                      decoration: const InputDecoration(
-                        hintText: 'Add a comment...',
+                      decoration: InputDecoration(
+                        hintText: l10n.addAComment,
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                       ),
                       maxLines: 1,
                       textInputAction: TextInputAction.send,

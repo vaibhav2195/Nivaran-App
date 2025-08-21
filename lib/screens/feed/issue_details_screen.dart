@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import '../../models/issue_model.dart';
 import '../../widgets/issue_card.dart';
 import '../../widgets/issue_timeline_widget.dart';
@@ -55,9 +56,10 @@ class _IssueDetailsScreenState extends State<IssueDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Issue Details"),
+        title: Text(l10n!.issueDetails),
       ),
       body: FutureBuilder<Issue?>(
         future: _issueFuture,
@@ -96,9 +98,9 @@ class _IssueDetailsScreenState extends State<IssueDetailsScreen> {
                 const SizedBox(height: 24),
                 
                 // Issue Timeline
-                const Text(
-                  'Issue Timeline',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.timeline,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 StreamBuilder<QuerySnapshot>(
@@ -133,9 +135,9 @@ class _IssueDetailsScreenState extends State<IssueDetailsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Community Contributions',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    Text(
+                      l10n.collaboration,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     if (userProfile != null)
                       ElevatedButton.icon(
@@ -158,7 +160,7 @@ class _IssueDetailsScreenState extends State<IssueDetailsScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Contribute'),
+                        label: Text(l10n.post),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           foregroundColor: Colors.white,

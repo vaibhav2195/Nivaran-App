@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:developer' as developer;
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 
 import '../../models/issue_model.dart';
 import '../../services/user_profile_service.dart';
@@ -70,9 +71,10 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Collaborate on Issue'),
+        title: Text(l10n!.collaboration),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -97,7 +99,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                       Text(widget.issue.description),
                       const SizedBox(height: 8),
                       Text(
-                        'Reported by ${widget.issue.username}',
+                        '${l10n.reportedOn} ${widget.issue.username}',
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
@@ -164,7 +166,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                     CustomTextField(
                       key: ValueKey(_selectedContributionType),
                       controller: _additionalInfoController,
-                      labelText: _selectedContributionType == 'update' ? 'Update details' : 'Additional information',
+                      labelText: _selectedContributionType == 'update' ? l10n.status : 'Additional information',
                       hintText: _selectedContributionType == 'update'
                           ? 'Describe the current status of this issue...'
                           : 'Add more details about this issue...',
@@ -186,9 +188,9 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Add Photos',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Text(
+                      l10n.post,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -196,7 +198,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
                         ElevatedButton.icon(
                           onPressed: _pickImage,
                           icon: const Icon(Icons.add_a_photo),
-                          label: const Text('Add Photo'),
+                          label: Text(l10n.post),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.grey[200],
                             foregroundColor: Colors.black,
@@ -269,7 +271,7 @@ class _IssueCollaborationScreenState extends State<IssueCollaborationScreen> {
 
               // Submit button
               AuthButton(
-                text: _isSubmitting ? 'Submitting...' : 'Submit Contribution',
+                text: _isSubmitting ? 'Submitting...' : l10n.submit,
                 onPressed: _isSubmitting ? null : _submitCollaboration,
                 isLoading: _isSubmitting,
               ),

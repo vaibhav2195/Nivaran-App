@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/notification_model.dart';
 import '../../services/user_profile_service.dart';
 import 'dart:developer' as developer;
@@ -167,8 +168,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (userProfileService.isLoadingProfile) {
         return Scaffold(
-            appBar: AppBar(title: const Text("Notifications")),
-            body: const Center(child: CircularProgressIndicator(semanticsLabel: "Loading user data..."))
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.notifications)),
+            body: Center(child: CircularProgressIndicator(semanticsLabel: AppLocalizations.of(context)!.title))
         );
     }
     
@@ -177,8 +178,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // This screen just shows a message if it's somehow still displayed.
       developer.log("NotificationsScreen build: User profile null and not loading. AuthWrapper should redirect.", name: "NotificationsScreen");
       return Scaffold(
-        appBar: AppBar(title: const Text("Notifications")),
-        body: const Center(child: Text("Please log in to see notifications.")),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.notifications)),
+        body: Center(child: Text(AppLocalizations.of(context)!.description)),
       );
     }
 
@@ -195,17 +196,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Notifications"),
+        title: Text(AppLocalizations.of(context)!.notifications),
       ),
       body: StreamBuilder<List<NotificationModel>>(
         stream: _notificationsStream ?? Stream.value([]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting && !(snapshot.hasData || snapshot.hasError)) {
-            return const Center(child: CircularProgressIndicator(semanticsLabel: "Loading notifications..."));
+            return Center(child: CircularProgressIndicator(semanticsLabel: AppLocalizations.of(context)!.notifications));
           }
           if (snapshot.hasError) {
             developer.log("Error in StreamBuilder: ${snapshot.error}", name: "NotificationsScreen");
-            return Center(child: Text("Error loading notifications: ${snapshot.error}"));
+            return Center(child: Text("${AppLocalizations.of(context)!.description}: ${snapshot.error}"));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
@@ -214,7 +215,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 children: [
                   Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey.shade400),
                   const SizedBox(height: 16),
-                  Text("No notifications yet.", style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+                  Text(AppLocalizations.of(context)!.notifications, style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
                 ],
               ),
             );

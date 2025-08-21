@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_functions/cloud_functions.dart';
@@ -483,15 +484,15 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
 
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryModel == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a category.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.category)));
       return;
     }
     if (_currentPosition == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location not available.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.description)));
       return;
     }
     if (appUser == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not authenticated.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.description)));
       return;
     }
 
@@ -638,7 +639,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
       await _firestoreService.addIssue(issueData);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Issue reported successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.description)));
         String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
         Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
       }
@@ -682,7 +683,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report Details'),
+        title: Text(AppLocalizations.of(context)!.report),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(false),
@@ -695,7 +696,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text(_analysisStatus.isNotEmpty ? _analysisStatus : "Loading..."),
+                  Text(_analysisStatus.isNotEmpty ? _analysisStatus : AppLocalizations.of(context)!.description),
                   if (_analysisStatus.contains("failed") || _analysisStatus.contains("Error"))
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -703,7 +704,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                         onPressed: () {
                           _fetchInitialData();
                         },
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)!.description),
                       ),
                     ),
                 ],
@@ -725,7 +726,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     SizedBox(height: screenHeight * 0.03),
 
                     // Location (read-only)
-                    Text("Location", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.map, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
@@ -745,21 +746,21 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     SizedBox(height: screenHeight * 0.02),
 
                     // Description (AI-generated but editable)
-                    Text("Description", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.description, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     CustomTextField(
                       controller: _descriptionController,
-                      hintText: isAnyProcessing ? 'AI is analyzing the image...' : 'Describe the issue...',
+                      hintText: isAnyProcessing ? AppLocalizations.of(context)!.description : AppLocalizations.of(context)!.description,
                       maxLines: 4,
                       keyboardType: TextInputType.multiline,
                       textCapitalization: TextCapitalization.sentences,
                       readOnly: isAnyProcessing,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a description.';
+                          return AppLocalizations.of(context)!.description;
                         }
                         if (value.trim().length < 10) {
-                          return 'Description is too short (min 10 characters).';
+                          return AppLocalizations.of(context)!.description;
                         }
                         return null;
                       },
@@ -785,11 +786,11 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     SizedBox(height: screenHeight * 0.02),
                     
                     // Category (AI-suggested but changeable)
-                    Text("Category", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.category, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     DropdownButtonFormField<CategoryModel>(
-                      decoration: const InputDecoration(
-                        hintText: 'Select Category',
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.category,
                       ),
                       value: _selectedCategoryModel,
                       isExpanded: true,
@@ -804,12 +805,12 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                           _selectedCategoryModel = newValue;
                         });
                       },
-                      validator: (value) => value == null ? 'Please select a category.' : null,
+                      validator: (value) => value == null ? AppLocalizations.of(context)!.category : null,
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     
                     // Urgency (AI-determined, read-only)
-                    Text("AI-Determined Urgency", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.description, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
@@ -834,8 +835,8 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                           ],
                           Expanded(
                             child: Text(
-                              _isDetectingUrgency ? 'AI is analyzing urgency...' : 
-                              (_detectedUrgency ?? 'Medium (Default)'),
+                              _isDetectingUrgency ? AppLocalizations.of(context)!.description :
+                              (_detectedUrgency ?? AppLocalizations.of(context)!.description),
                               style: textTheme.bodyLarge?.copyWith(
                                 fontSize: 15,
                                 color: _isDetectingUrgency ? Colors.orange.shade800 : 
@@ -857,7 +858,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     SizedBox(height: screenHeight * 0.03),
 
                     // Tags (Optional)
-                    Text("Tags (Optional, comma-separated)", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.description, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     CustomTextField(
                       controller: _tagsController,
@@ -912,7 +913,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                             await _performAIAnalysis();
                           },
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Analyse Again'),
+                          label: Text(AppLocalizations.of(context)!.description),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[100],
                             foregroundColor: Colors.blue[800],
@@ -922,7 +923,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     
                     // Submit button
                     AuthButton(
-                      text: 'Submit Report',
+                      text: AppLocalizations.of(context)!.submitIssue,
                       onPressed: (_isLoadingInitialData || isAnyProcessing) ? null : _submitReport,
                       isLoading: _isSubmitting,
                     ),
