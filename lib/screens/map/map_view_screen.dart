@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -358,20 +359,20 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
         return StatefulBuilder( 
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Filter Issues'),
+              title: Text(AppLocalizations.of(context)!.filterIssues),
               contentPadding: const EdgeInsets.all(20),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text("Category", style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text(AppLocalizations.of(context)!.category, style: const TextStyle(fontWeight: FontWeight.w500)),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      decoration: const InputDecoration(hintText: 'All Categories'),
+                      decoration: InputDecoration(hintText: AppLocalizations.of(context)!.allCategories),
                       value: tempCategory,
                       items: [
-                        const DropdownMenuItem<String>(value: null, child: Text('All Categories')),
+                        DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allCategories)),
                         ..._fetchedFilterCategories.map((CategoryModel category) {
                           return DropdownMenuItem<String>(
                             value: category.name,
@@ -384,13 +385,13 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text("Urgency", style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text(AppLocalizations.of(context)!.urgency, style: const TextStyle(fontWeight: FontWeight.w500)),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      decoration: const InputDecoration(hintText: 'All Urgencies'),
+                      decoration: InputDecoration(hintText: AppLocalizations.of(context)!.allUrgencies),
                       value: tempUrgency,
                       items: [
-                        const DropdownMenuItem<String>(value: null, child: Text('All Urgencies')),
+                        DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allUrgencies)),
                         ..._allUrgencyLevels.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -403,13 +404,13 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text("Status", style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text(AppLocalizations.of(context)!.status, style: const TextStyle(fontWeight: FontWeight.w500)),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      decoration: const InputDecoration(hintText: 'All Statuses'),
+                      decoration: InputDecoration(hintText: AppLocalizations.of(context)!.allStatus),
                       value: tempStatus,
                       items: [
-                        const DropdownMenuItem<String>(value: null, child: Text('All Statuses')),
+                        DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allStatus)),
                         ..._allStatuses.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -426,7 +427,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Clear All'),
+                  child: Text(AppLocalizations.of(context)!.clearAll),
                   onPressed: () {
                     if(mounted) {
                       setState(() {
@@ -440,7 +441,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
                   },
                 ),
                 ElevatedButton(
-                  child: const Text('Apply Filters'),
+                  child: Text(AppLocalizations.of(context)!.applyFilters),
                   onPressed: () {
                     if(mounted) {
                       setState(() {
@@ -537,7 +538,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
               mini: true,
               onPressed: _showFilterDialog,
               backgroundColor: Colors.white,
-              tooltip: 'Filter Issues',
+              tooltip: AppLocalizations.of(context)!.filterIssues,
               child: Icon(Icons.filter_list, color: Theme.of(context).primaryColor),
             ),
           ),

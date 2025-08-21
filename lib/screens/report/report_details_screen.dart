@@ -74,7 +74,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     if (!mounted) return;
     setState(() {
       _isLoadingInitialData = true;
-      _analysisStatus = "Fetching location and categories...";
+      _analysisStatus = AppLocalizations.of(context)!.fetchingLocationAndCategories;
     });
     
     try {
@@ -91,7 +91,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       
       if (mounted) {
         setState(() {
-          _analysisStatus = "Loading categories...";
+          _analysisStatus = AppLocalizations.of(context)!.loadingCategories;
         });
       }
 
@@ -110,7 +110,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       if (widget.imagePath.isNotEmpty && _currentPosition != null) {
         if (mounted) {
           setState(() {
-            _analysisStatus = "Analyzing image with AI...";
+            _analysisStatus = AppLocalizations.of(context)!.analyzingImageWithAI;
           });
         }
         developer.log('Step 3: Starting AI analysis...', name: 'ReportDetailsScreen');
@@ -215,7 +215,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         
         if (mounted) {
           setState(() {
-            _analysisStatus = "AI analysis complete!";
+            _analysisStatus = AppLocalizations.of(context)!.aiAnalysisComplete;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

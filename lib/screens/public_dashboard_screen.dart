@@ -42,12 +42,12 @@ class PublicDashboardScreen extends StatelessWidget {
             _buildPredictiveMaintenance(context, textTheme),
             const SizedBox(height: 32),
             Text(
-              'Resolution Times & Satisfaction Rates', // Simplified title
+              AppLocalizations.of(context)!.resolutionTimesSatisfactionRates,
               style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              '(Data by Employee/Department)', // Subtitle for clarity
+              AppLocalizations.of(context)!.dataByEmployeeDepartment,
               style: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
@@ -58,7 +58,7 @@ class PublicDashboardScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Center(
               child: Text(
-                'This dashboard provides transparency on issue resolution and citizen satisfaction.',
+                AppLocalizations.of(context)!.dashboardTransparency,
                 style: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
@@ -237,7 +237,7 @@ class PublicDashboardScreen extends StatelessWidget {
         }
         
         if (pieSections.isEmpty) {
-          return const Center(child: Text('No issue data available'));
+          return Center(child: Text(AppLocalizations.of(context)!.noIssueDataAvailable));
         }
         
         return Column(
@@ -337,13 +337,13 @@ class PublicDashboardScreen extends StatelessWidget {
                   Icon(Icons.people_outline, size: 60, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'No employee performance data available at the moment.',
+                    AppLocalizations.of(context)!.noEmployeeDataAvailable,
                     textAlign: TextAlign.center,
                     style: textTheme.titleMedium?.copyWith(color: Colors.grey[700]),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'This section will show statistics once employee data is populated in the "employees" collection in Firestore.',
+                    AppLocalizations.of(context)!.noEmployeePerformanceData,
                     textAlign: TextAlign.center,
                     style: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
@@ -434,13 +434,13 @@ Widget _buildPredictiveMaintenance(BuildContext context, TextTheme textTheme) {
                 Icon(Icons.analytics_outlined, size: 60, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'Not enough historical data for predictions yet',
+                  AppLocalizations.of(context)!.noHistoricalDataForPredictions,
                   textAlign: TextAlign.center,
                   style: textTheme.titleMedium?.copyWith(color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'As more issues are reported, we\'ll identify patterns to predict where problems might recur.',
+                  AppLocalizations.of(context)!.notEnoughHistoricalData,
                   textAlign: TextAlign.center,
                   style: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
@@ -454,13 +454,13 @@ Widget _buildPredictiveMaintenance(BuildContext context, TextTheme textTheme) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Predictive Maintenance Insights',
+            AppLocalizations.of(context)!.predictiveMaintenanceInsights,
             style: textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Areas where issues are likely to reoccur based on historical patterns',
+            AppLocalizations.of(context)!.areasLikelyToReoccur,
             style: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
@@ -551,7 +551,7 @@ Widget _buildPredictiveMaintenance(BuildContext context, TextTheme textTheme) {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Proactive maintenance in this area could prevent recurring issues.',
+                        AppLocalizations.of(context)!.proactiveMaintenanceBenefit,
                         style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
                       ),
                     ],
@@ -582,12 +582,12 @@ Widget _buildPredictiveMaintenance(BuildContext context, TextTheme textTheme) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Benefit: Enables proactive government action',
+                          AppLocalizations.of(context)!.benefitEnablesProactiveAction,
                           style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.green.shade800),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Addressing these areas before new issues are reported can save resources and improve citizen satisfaction.',
+                          AppLocalizations.of(context)!.addressingAreasSaveResources,
                           style: textTheme.bodySmall?.copyWith(color: Colors.green.shade900),
                         ),
                       ],

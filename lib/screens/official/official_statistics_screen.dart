@@ -55,7 +55,7 @@ class OfficialStatisticsScreen extends StatelessWidget {
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
-              child: Text('${AppLocalizations.of(context)!.description} $department department.'),
+              child: Text(AppLocalizations.of(context)!.noIssuesMatchFilters(department)),
             );
           }
 

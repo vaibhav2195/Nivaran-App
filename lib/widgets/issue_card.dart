@@ -490,7 +490,7 @@ class _IssueCardState extends State<IssueCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Original Report (in ${issue.userInputLanguage!.split('-')[0]}):", // Displaying base language
+            "Original ${AppLocalizations.of(context)!.report} (in ${issue.userInputLanguage!.split('-')[0]}):",
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.blueGrey[700],
               fontWeight: FontWeight.w500,
@@ -706,7 +706,7 @@ class _IssueCardState extends State<IssueCard> {
                 const SizedBox(width: 8),
                 _ActionChipButton(icon: Icons.add_circle_outline, label: l10n.collaboration, onTap: () => _navigateToCollaboration()),
                 const SizedBox(width: 8),
-                _ActionChipButton(icon: Icons.share_outlined, label: "Share", onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share Issue - Coming Soon!'))))
+                _ActionChipButton(icon: Icons.share_outlined, label: AppLocalizations.of(context)!.share, onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Share Issue - Coming Soon!'))))
               ],
             ),
           ],

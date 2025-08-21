@@ -206,4 +206,230 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get timeline => 'समयरेखा';
+
+  @override
+  String get analyzingImageWithAI => 'एआई के साथ छवि का विश्लेषण हो रहा है...';
+
+  @override
+  String get loadingCategories => 'श्रेणियां लोड हो रही हैं...';
+
+  @override
+  String get share => 'शेयर करें';
+
+  @override
+  String get tenKmRadius => '10 किमी त्रिज्या';
+
+  @override
+  String get aiRiskAnalysis => 'एआई जोखिम विश्लेषण';
+
+  @override
+  String get filterIssues => 'समस्याएं फ़िल्टर करें';
+
+  @override
+  String get allCategories => 'सभी श्रेणियां';
+
+  @override
+  String get urgency => 'तत्काल';
+
+  @override
+  String get allUrgencies => 'सभी तात्कालिकताएं';
+
+  @override
+  String get allStatus => 'सभी स्थितियां';
+
+  @override
+  String get clearAll => 'सभी साफ़ करें';
+
+  @override
+  String get applyFilters => 'फ़िल्टर लागू करें';
+
+  @override
+  String get low => 'कम';
+
+  @override
+  String get medium => 'मध्यम';
+
+  @override
+  String get high => 'उच्च';
+
+  @override
+  String get reported => 'रिपोर्ट किया गया';
+
+  @override
+  String get acknowledged => 'स्वीकृत';
+
+  @override
+  String get inProgress => 'प्रगति में';
+
+  @override
+  String get resolved => 'हल किया गया';
+
+  @override
+  String get rejected => 'अस्वीकृत';
+
+  @override
+  String get pothole => 'गड्ढा';
+
+  @override
+  String get streetLightOut => 'स्ट्रीट लाइट बंद';
+
+  @override
+  String get fallenTree => 'गिरा हुआ पेड़';
+
+  @override
+  String get waterLeakage => 'पानी का रिसाव';
+
+  @override
+  String get fetchingLocationAndCategories =>
+      'स्थान और श्रेणियां प्राप्त हो रही हैं...';
+
+  @override
+  String get aiAnalysisComplete => 'एआई विश्लेषण पूर्ण';
+
+  @override
+  String get predictiveMaintenanceInsights =>
+      'भविष्य कहनेवाला रखरखाव अंतर्दृष्टि';
+
+  @override
+  String get areasLikelyToReoccur =>
+      'ऐसी जगहें जहां ऐतिहासिक पैटर्न के आधार पर समस्याओं के फिर से होने की संभावना है';
+
+  @override
+  String get proactiveMaintenanceBenefit =>
+      'इस क्षेत्र में सक्रिय रखरखाव से बार-बार होने वाली समस्याओं को रोका जा सकता है।';
+
+  @override
+  String get benefitEnablesProactiveAction =>
+      'लाभ: सक्रिय सरकारी कार्रवाई को सक्षम बनाता है';
+
+  @override
+  String get addressingAreasSaveResources =>
+      'नई समस्याओं की रिपोर्ट होने से पहले इन क्षेत्रों को संबोधित करने से संसाधनों की बचत हो सकती है और नागरिक संतुष्टि में सुधार हो सकता है।';
+
+  @override
+  String get notEnoughHistoricalData =>
+      'जैसे-जैसे अधिक समस्याओं की रिपोर्ट की जाएगी, हम यह अनुमान लगाने के लिए पैटर्न की पहचान करेंगे कि समस्याएं कहां फिर से आ सकती हैं।';
+
+  @override
+  String get noHistoricalDataForPredictions =>
+      'भविष्यवाणियों के लिए पर्याप्त ऐतिहासिक डेटा नहीं है';
+
+  @override
+  String get noEmployeePerformanceData =>
+      'यह अनुभाग आंकड़े दिखाएगा जब कर्मचारी डेटा फायरस्टोर में \"कर्मचारी\" संग्रह में पॉप्युलेट हो जाएगा।';
+
+  @override
+  String get noEmployeeDataAvailable =>
+      'फिलहाल कोई कर्मचारी प्रदर्शन डेटा उपलब्ध नहीं है।';
+
+  @override
+  String get noIssueDataAvailable => 'कोई समस्या डेटा उपलब्ध नहीं है';
+
+  @override
+  String get dashboardTransparency =>
+      'यह डैशबोर्ड समस्या समाधान और नागरिक संतुष्टि पर पारदर्शिता प्रदान करता है।';
+
+  @override
+  String get dataByEmployeeDepartment => '(कर्मचारी/विभाग द्वारा डेटा)';
+
+  @override
+  String get resolutionTimesSatisfactionRates => 'समाधान समय और संतुष्टि दर';
+
+  @override
+  String get mobileNo => 'मोबाइल नंबर';
+
+  @override
+  String get officialAccountPendingVerification =>
+      'आपका आधिकारिक खाता व्यवस्थापक सत्यापन के लिए लंबित है।';
+
+  @override
+  String get accessDeniedOfficialOnly =>
+      'पहुंच अस्वीकृत। यह पोर्टल केवल अधिकृत अधिकारियों के लिए है।';
+
+  @override
+  String get loginSucceededFailedToVerify =>
+      'लॉगिन सफल रहा लेकिन आधिकारिक स्थिति सत्यापित करने में विफल रहा। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get officialLoginFailed => 'अधिकारी लॉगिन विफल।';
+
+  @override
+  String get unexpectedErrorOfficialLogin =>
+      'अधिकारी लॉगिन के दौरान एक अप्रत्याशक्षित त्रुटि हुई।';
+
+  @override
+  String get googleSignInSuccessfulPendingVerification =>
+      'Google साइन-इन सफल। आपका आधिकारिक खाता व्यवस्थापक सत्यापन के लिए लंबित है।';
+
+  @override
+  String get googleAccountNotRecognized =>
+      'Google खाता एक अधिकारी के रूप में मान्यता प्राप्त नहीं है। कृपया आधिकारिक क्रेडेंशियल का उपयोग करें या व्यवस्थापक से संपर्क करें।';
+
+  @override
+  String get googleSignInSuccessfulFailedToVerify =>
+      'Google साइन-इन सफल रहा लेकिन आधिकारिक स्थिति सत्यापित करने में विफल रहा।';
+
+  @override
+  String get googleSignInCancelledOrFailed =>
+      'Google साइन-इन रद्द या विफल हो गया।';
+
+  @override
+  String get googleSignInOfficialsFailed =>
+      'अधिकारियों के लिए Google साइन-इन विफल।';
+
+  @override
+  String get fullNameIsRequired => 'पूरा नाम आवश्यक है';
+
+  @override
+  String get officialEmailIsRequired => 'आधिकारिक ईमेल आवश्यक है';
+
+  @override
+  String get mobileNumberIsRequired => 'मोबाइल नंबर आवश्यक है';
+
+  @override
+  String get passwordIsRequired => 'पासवर्ड आवश्यक है';
+
+  @override
+  String get pleaseConfirmYourPassword => 'कृपया अपना पासवर्ड पुष्टि करें';
+
+  @override
+  String get checkVerificationStatus => 'सत्यापन स्थिति जांचें';
+
+  @override
+  String get areaZoneOfOperation => 'संचालन का क्षेत्र/जोन';
+
+  @override
+  String get governmentIssuedIdNumber => 'सरकारी आईडी नंबर';
+
+  @override
+  String noIssuesMatchFilters(Object department) {
+    return 'वर्तमान फ़िल्टर से कोई समस्या मेल नहीं खाती $department';
+  }
+
+  @override
+  String get editProfile => 'प्रोफ़ाइल संपादित करें';
+
+  @override
+  String get changePassword => 'पासवर्ड बदलें';
+
+  @override
+  String get myActivityLog => 'मेरी गतिविधि लॉग';
+
+  @override
+  String get notificationSetting => 'अधिसूचना सेटिंग';
+
+  @override
+  String get designation => 'पदनाम';
+
+  @override
+  String get sortByDate => 'दिनांक के अनुसार क्रमबद्ध करें';
+
+  @override
+  String get sortByUrgency => 'तत्काल के अनुसार क्रमबद्ध करें';
+
+  @override
+  String get sortByUpvote => 'अपवोट के अनुसार क्रमबद्ध करें';
+
+  @override
+  String get yourVoiceOurAction => 'आपकी आवाज हमारी कार्रवाई';
 }

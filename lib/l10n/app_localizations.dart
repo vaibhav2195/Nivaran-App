@@ -493,6 +493,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Timeline'**
   String get timeline;
+
+  /// No description provided for @analyzingImageWithAI.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing image with AI...'**
+  String get analyzingImageWithAI;
+
+  /// No description provided for @loadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading categories...'**
+  String get loadingCategories;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @tenKmRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'10 km radius'**
+  String get tenKmRadius;
+
+  /// No description provided for @aiRiskAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Risk Analysis'**
+  String get aiRiskAnalysis;
+
+  /// No description provided for @filterIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Issues'**
+  String get filterIssues;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All Categories'**
+  String get allCategories;
+
+  /// No description provided for @urgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgency'**
+  String get urgency;
+
+  /// No description provided for @allUrgencies.
+  ///
+  /// In en, this message translates to:
+  /// **'All Urgencies'**
+  String get allUrgencies;
+
+  /// No description provided for @allStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'All Status'**
+  String get allStatus;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearAll;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get applyFilters;
+
+  /// No description provided for @low.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get low;
+
+  /// No description provided for @medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get medium;
+
+  /// No description provided for @high.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get high;
+
+  /// No description provided for @reported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported'**
+  String get reported;
+
+  /// No description provided for @acknowledged.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledged'**
+  String get acknowledged;
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get inProgress;
+
+  /// No description provided for @resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get resolved;
+
+  /// No description provided for @rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get rejected;
+
+  /// No description provided for @pothole.
+  ///
+  /// In en, this message translates to:
+  /// **'Pothole'**
+  String get pothole;
+
+  /// No description provided for @streetLightOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Street Light Out'**
+  String get streetLightOut;
+
+  /// No description provided for @fallenTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Fallen Tree'**
+  String get fallenTree;
+
+  /// No description provided for @waterLeakage.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Leakage'**
+  String get waterLeakage;
+
+  /// No description provided for @fetchingLocationAndCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching location and categories...'**
+  String get fetchingLocationAndCategories;
+
+  /// No description provided for @aiAnalysisComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'AI analysis complete'**
+  String get aiAnalysisComplete;
+
+  /// No description provided for @predictiveMaintenanceInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Predictive Maintenance Insights'**
+  String get predictiveMaintenanceInsights;
+
+  /// No description provided for @areasLikelyToReoccur.
+  ///
+  /// In en, this message translates to:
+  /// **'Areas where issues are likely to reoccur based on historical patterns'**
+  String get areasLikelyToReoccur;
+
+  /// No description provided for @proactiveMaintenanceBenefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Proactive maintenance in this area could prevent recurring issues.'**
+  String get proactiveMaintenanceBenefit;
+
+  /// No description provided for @benefitEnablesProactiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefit: Enables proactive government action'**
+  String get benefitEnablesProactiveAction;
+
+  /// No description provided for @addressingAreasSaveResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Addressing these areas before new issues are reported can save resources and improve citizen satisfaction.'**
+  String get addressingAreasSaveResources;
+
+  /// No description provided for @notEnoughHistoricalData.
+  ///
+  /// In en, this message translates to:
+  /// **'As more issues are reported, we\'ll identify patterns to predict where problems might recur.'**
+  String get notEnoughHistoricalData;
+
+  /// No description provided for @noHistoricalDataForPredictions.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough historical data for predictions yet'**
+  String get noHistoricalDataForPredictions;
+
+  /// No description provided for @noEmployeePerformanceData.
+  ///
+  /// In en, this message translates to:
+  /// **'This section will show statistics once employee data is populated in the \"employees\" collection in Firestore.'**
+  String get noEmployeePerformanceData;
+
+  /// No description provided for @noEmployeeDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee performance data available at the moment.'**
+  String get noEmployeeDataAvailable;
+
+  /// No description provided for @noIssueDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No issue data available'**
+  String get noIssueDataAvailable;
+
+  /// No description provided for @dashboardTransparency.
+  ///
+  /// In en, this message translates to:
+  /// **'This dashboard provides transparency on issue resolution and citizen satisfaction.'**
+  String get dashboardTransparency;
+
+  /// No description provided for @dataByEmployeeDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'(Data by Employee/Department)'**
+  String get dataByEmployeeDepartment;
+
+  /// No description provided for @resolutionTimesSatisfactionRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution Times & Satisfaction Rates'**
+  String get resolutionTimesSatisfactionRates;
+
+  /// No description provided for @mobileNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile No'**
+  String get mobileNo;
+
+  /// No description provided for @officialAccountPendingVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Your official account is pending admin verification.'**
+  String get officialAccountPendingVerification;
+
+  /// No description provided for @accessDeniedOfficialOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Denied. This portal is for authorized officials only.'**
+  String get accessDeniedOfficialOnly;
+
+  /// No description provided for @loginSucceededFailedToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Login succeeded but failed to verify official status. Please try again.'**
+  String get loginSucceededFailedToVerify;
+
+  /// No description provided for @officialLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Official login failed.'**
+  String get officialLoginFailed;
+
+  /// No description provided for @unexpectedErrorOfficialLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred during official login.'**
+  String get unexpectedErrorOfficialLogin;
+
+  /// No description provided for @googleSignInSuccessfulPendingVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In successful. Your official account is pending admin verification.'**
+  String get googleSignInSuccessfulPendingVerification;
+
+  /// No description provided for @googleAccountNotRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Google account not recognized as an official. Please use official credentials or contact admin.'**
+  String get googleAccountNotRecognized;
+
+  /// No description provided for @googleSignInSuccessfulFailedToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In successful but failed to verify official status.'**
+  String get googleSignInSuccessfulFailedToVerify;
+
+  /// No description provided for @googleSignInCancelledOrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In was cancelled or failed.'**
+  String get googleSignInCancelledOrFailed;
+
+  /// No description provided for @googleSignInOfficialsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In for officials failed.'**
+  String get googleSignInOfficialsFailed;
+
+  /// No description provided for @fullNameIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name is Required'**
+  String get fullNameIsRequired;
+
+  /// No description provided for @officialEmailIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Email is required'**
+  String get officialEmailIsRequired;
+
+  /// No description provided for @mobileNumberIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number is Required'**
+  String get mobileNumberIsRequired;
+
+  /// No description provided for @passwordIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Is Required'**
+  String get passwordIsRequired;
+
+  /// No description provided for @pleaseConfirmYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your Password'**
+  String get pleaseConfirmYourPassword;
+
+  /// No description provided for @checkVerificationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Verification Status'**
+  String get checkVerificationStatus;
+
+  /// No description provided for @areaZoneOfOperation.
+  ///
+  /// In en, this message translates to:
+  /// **'Area/Zone of Operation'**
+  String get areaZoneOfOperation;
+
+  /// No description provided for @governmentIssuedIdNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Government-issued ID number'**
+  String get governmentIssuedIdNumber;
+
+  /// No description provided for @noIssuesMatchFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No issues match current filters for {department}'**
+  String noIssuesMatchFilters(Object department);
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePassword;
+
+  /// No description provided for @myActivityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'My Activity Log'**
+  String get myActivityLog;
+
+  /// No description provided for @notificationSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Setting'**
+  String get notificationSetting;
+
+  /// No description provided for @designation.
+  ///
+  /// In en, this message translates to:
+  /// **'Designation'**
+  String get designation;
+
+  /// No description provided for @sortByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort By date'**
+  String get sortByDate;
+
+  /// No description provided for @sortByUrgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by urgency'**
+  String get sortByUrgency;
+
+  /// No description provided for @sortByUpvote.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by upvote'**
+  String get sortByUpvote;
+
+  /// No description provided for @yourVoiceOurAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Voice Our Action'**
+  String get yourVoiceOurAction;
 }
 
 class _AppLocalizationsDelegate

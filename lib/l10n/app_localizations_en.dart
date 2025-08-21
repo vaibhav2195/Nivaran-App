@@ -206,4 +206,230 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timeline => 'Timeline';
+
+  @override
+  String get analyzingImageWithAI => 'Analyzing image with AI...';
+
+  @override
+  String get loadingCategories => 'Loading categories...';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get tenKmRadius => '10 km radius';
+
+  @override
+  String get aiRiskAnalysis => 'AI Risk Analysis';
+
+  @override
+  String get filterIssues => 'Filter Issues';
+
+  @override
+  String get allCategories => 'All Categories';
+
+  @override
+  String get urgency => 'Urgency';
+
+  @override
+  String get allUrgencies => 'All Urgencies';
+
+  @override
+  String get allStatus => 'All Status';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get low => 'Low';
+
+  @override
+  String get medium => 'Medium';
+
+  @override
+  String get high => 'High';
+
+  @override
+  String get reported => 'Reported';
+
+  @override
+  String get acknowledged => 'Acknowledged';
+
+  @override
+  String get inProgress => 'In Progress';
+
+  @override
+  String get resolved => 'Resolved';
+
+  @override
+  String get rejected => 'Rejected';
+
+  @override
+  String get pothole => 'Pothole';
+
+  @override
+  String get streetLightOut => 'Street Light Out';
+
+  @override
+  String get fallenTree => 'Fallen Tree';
+
+  @override
+  String get waterLeakage => 'Water Leakage';
+
+  @override
+  String get fetchingLocationAndCategories =>
+      'Fetching location and categories...';
+
+  @override
+  String get aiAnalysisComplete => 'AI analysis complete';
+
+  @override
+  String get predictiveMaintenanceInsights => 'Predictive Maintenance Insights';
+
+  @override
+  String get areasLikelyToReoccur =>
+      'Areas where issues are likely to reoccur based on historical patterns';
+
+  @override
+  String get proactiveMaintenanceBenefit =>
+      'Proactive maintenance in this area could prevent recurring issues.';
+
+  @override
+  String get benefitEnablesProactiveAction =>
+      'Benefit: Enables proactive government action';
+
+  @override
+  String get addressingAreasSaveResources =>
+      'Addressing these areas before new issues are reported can save resources and improve citizen satisfaction.';
+
+  @override
+  String get notEnoughHistoricalData =>
+      'As more issues are reported, we\'ll identify patterns to predict where problems might recur.';
+
+  @override
+  String get noHistoricalDataForPredictions =>
+      'Not enough historical data for predictions yet';
+
+  @override
+  String get noEmployeePerformanceData =>
+      'This section will show statistics once employee data is populated in the \"employees\" collection in Firestore.';
+
+  @override
+  String get noEmployeeDataAvailable =>
+      'No employee performance data available at the moment.';
+
+  @override
+  String get noIssueDataAvailable => 'No issue data available';
+
+  @override
+  String get dashboardTransparency =>
+      'This dashboard provides transparency on issue resolution and citizen satisfaction.';
+
+  @override
+  String get dataByEmployeeDepartment => '(Data by Employee/Department)';
+
+  @override
+  String get resolutionTimesSatisfactionRates =>
+      'Resolution Times & Satisfaction Rates';
+
+  @override
+  String get mobileNo => 'Mobile No';
+
+  @override
+  String get officialAccountPendingVerification =>
+      'Your official account is pending admin verification.';
+
+  @override
+  String get accessDeniedOfficialOnly =>
+      'Access Denied. This portal is for authorized officials only.';
+
+  @override
+  String get loginSucceededFailedToVerify =>
+      'Login succeeded but failed to verify official status. Please try again.';
+
+  @override
+  String get officialLoginFailed => 'Official login failed.';
+
+  @override
+  String get unexpectedErrorOfficialLogin =>
+      'An unexpected error occurred during official login.';
+
+  @override
+  String get googleSignInSuccessfulPendingVerification =>
+      'Google Sign-In successful. Your official account is pending admin verification.';
+
+  @override
+  String get googleAccountNotRecognized =>
+      'Google account not recognized as an official. Please use official credentials or contact admin.';
+
+  @override
+  String get googleSignInSuccessfulFailedToVerify =>
+      'Google Sign-In successful but failed to verify official status.';
+
+  @override
+  String get googleSignInCancelledOrFailed =>
+      'Google Sign-In was cancelled or failed.';
+
+  @override
+  String get googleSignInOfficialsFailed =>
+      'Google Sign-In for officials failed.';
+
+  @override
+  String get fullNameIsRequired => 'Full Name is Required';
+
+  @override
+  String get officialEmailIsRequired => 'Official Email is required';
+
+  @override
+  String get mobileNumberIsRequired => 'Mobile number is Required';
+
+  @override
+  String get passwordIsRequired => 'Password Is Required';
+
+  @override
+  String get pleaseConfirmYourPassword => 'Please confirm your Password';
+
+  @override
+  String get checkVerificationStatus => 'Check Verification Status';
+
+  @override
+  String get areaZoneOfOperation => 'Area/Zone of Operation';
+
+  @override
+  String get governmentIssuedIdNumber => 'Government-issued ID number';
+
+  @override
+  String noIssuesMatchFilters(Object department) {
+    return 'No issues match current filters for $department';
+  }
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get myActivityLog => 'My Activity Log';
+
+  @override
+  String get notificationSetting => 'Notification Setting';
+
+  @override
+  String get designation => 'Designation';
+
+  @override
+  String get sortByDate => 'Sort By date';
+
+  @override
+  String get sortByUrgency => 'Sort by urgency';
+
+  @override
+  String get sortByUpvote => 'Sort by upvote';
+
+  @override
+  String get yourVoiceOurAction => 'Your Voice Our Action';
 }

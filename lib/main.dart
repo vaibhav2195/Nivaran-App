@@ -231,83 +231,69 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class InitialAuthCheck extends StatelessWidget {
+class InitialAuthCheck extends StatefulWidget {
   const InitialAuthCheck({super.key});
 
   @override
+  State<InitialAuthCheck> createState() => _InitialAuthCheckState();
+}
+
+class _InitialAuthCheckState extends State<InitialAuthCheck> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleAuthChanged();
+    });
+  }
+
+  Future<void> _handleAuthChanged() async {
+    final auth = FirebaseAuth.instance;
+    final user = auth.currentUser;
+
+    if (user != null) {
+      final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+      
+      // Ensure profile is loaded
+      if (userProfileService.currentUserProfile?.uid != user.uid) {
+        await userProfileService.fetchAndSetCurrentUserProfile();
+      }
+
+      if (!mounted) return;
+
+      final profile = userProfileService.currentUserProfile;
+
+      if (!user.emailVerified) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/verify_email_screen', (route) => false);
+        return;
+      }
+
+      if (profile != null) {
+        if (profile.isOfficial) {
+          if (profile.department == null || profile.department!.isEmpty) {
+            Navigator.of(context).pushNamedAndRemoveUntil('/official_details_entry', (route) => false);
+          } else {
+            Navigator.of(context).pushNamedAndRemoveUntil('/official_dashboard', (route) => false);
+          }
+        } else {
+          Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
+        }
+      } else {
+        // Handle profile not loading
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not load user profile. Please try again.")));
+        Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
+      }
+    } else {
+      Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, authSnapshot) {
-        if (authSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator(semanticsLabel: "Auth check...")));
-        }
-
-        final User? authUser = authSnapshot.data;
-
-        if (authUser != null) {
-          return Consumer<UserProfileService>(
-            builder: (context, userProfileService, child) {
-              if (userProfileService.currentUserProfile?.uid != authUser.uid && !userProfileService.isLoadingProfile) {
-                 developer.log("InitialAuthCheck: Auth user exists, fetching profile for ${authUser.uid}", name: "InitialAuthCheck");
-                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (context.mounted) {
-                        userProfileService.fetchAndSetCurrentUserProfile();
-                    }
-                 });
-              }
-
-              if (userProfileService.isLoadingProfile && userProfileService.currentUserProfile == null) {
-                developer.log("InitialAuthCheck: Profile is loading...", name: "InitialAuthCheck");
-                return const Scaffold(body: Center(child: CircularProgressIndicator(semanticsLabel: "Loading profile...")));
-              }
-              
-              if (!authUser.emailVerified) {
-                developer.log("InitialAuthCheck: User ${authUser.uid} email not verified. Navigating to /verify_email_screen", name: "InitialAuthCheck");
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (ModalRoute.of(context)?.settings.name != '/verify_email_screen' && context.mounted) {
-                     Navigator.of(context).pushNamedAndRemoveUntil('/verify_email_screen', (route) => false);
-                  }
-                });
-                return const Scaffold(body: Center(child: Text("Redirecting to email verification...")));
-              }
-
-              if (userProfileService.currentUserProfile != null) {
-                developer.log("InitialAuthCheck: Profile loaded. Role: ${userProfileService.currentUserProfile!.role}", name: "InitialAuthCheck");
-                if (userProfileService.currentUserProfile!.isOfficial) {
-                  if (userProfileService.currentUserProfile!.department == null || 
-                      userProfileService.currentUserProfile!.department!.isEmpty) {
-                    developer.log("InitialAuthCheck: Official profile department is null/empty. Navigating to /official_details_entry", name: "InitialAuthCheck");
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                       if (ModalRoute.of(context)?.settings.name != '/official_details_entry' && context.mounted) {
-                           Navigator.of(context).pushNamedAndRemoveUntil('/official_details_entry', (route) => false);
-                       }
-                    });
-                    return const Scaffold(body: Center(child: Text("Completing official profile...")));
-                  }
-                  developer.log("InitialAuthCheck: Navigating to /official_dashboard", name: "InitialAuthCheck");
-                  return const OfficialDashboardScreen();
-                }
-                developer.log("InitialAuthCheck: Navigating to /app (citizen)", name: "InitialAuthCheck");
-                return const MainAppScaffold();
-              } else {
-                developer.log("InitialAuthCheck: Auth user verified, but profile is null. Showing loading/error.", name: "InitialAuthCheck");
-                return const Scaffold(body: Center(child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Loading user data..."),
-                    SizedBox(height:10),
-                    CircularProgressIndicator()
-                  ],
-                )));
-              }
-            },
-          );
-        }
-        
-        developer.log("InitialAuthCheck: No authenticated user. Navigating to /role_selection", name: "InitialAuthCheck");
-        return const RoleSelectionScreen();
-      },
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(semanticsLabel: "Checking authentication..."),
+      ),
     );
   }
 }

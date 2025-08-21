@@ -149,7 +149,7 @@ class AccountScreen extends StatelessWidget {
                       ] else if (currentUserProfile.isPendingOfficial) ...[
                         const SizedBox(height: 4),
                         Text(
-                          "Official Account (Pending Verification)",
+                          AppLocalizations.of(context)!.officialAccountPendingVerification,
                           style: TextStyle(fontSize: 14, color: Colors.orange.shade700, fontStyle: FontStyle.italic),
                         ),
                       ]

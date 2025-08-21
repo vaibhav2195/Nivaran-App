@@ -1,6 +1,7 @@
 // lib/screens/report/camera_capture_screen.dart
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:developer' as developer;
 import 'report_details_screen.dart';
@@ -480,7 +481,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> with WidgetsB
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report New Issue'),
+        title: Text(AppLocalizations.of(context)!.reportAnIssue),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,

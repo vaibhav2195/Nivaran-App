@@ -42,14 +42,14 @@ Future<void> _initializeCameraAndLocation() async {
 
   if (cameraStatus != PermissionStatus.granted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.description)),
+      const SnackBar(content: Text("Camera permission is required to take a picture.")),
     );
     return;
   }
 
   if (locationStatus != PermissionStatus.granted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.description)),
+      const SnackBar(content: Text("Location permission is required to submit an issue.")),
     );
     return;
   }
@@ -94,7 +94,7 @@ Future<void> _initializeCameraAndLocation() async {
     final title = _titleController.text.trim();
     if (_capturedImage == null || _currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.description)),
+        const SnackBar(content: Text('Please take a picture and get your location.')),
       );
       return;
     }
@@ -142,14 +142,14 @@ Future<void> _initializeCameraAndLocation() async {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.description)),
+          const SnackBar(content: Text('Issue submitted successfully!')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.description)),
+          SnackBar(content: Text('Failed to submit issue: $e')),
         );
       }
     } finally {

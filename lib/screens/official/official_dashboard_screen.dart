@@ -268,32 +268,32 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Filter Issues'),
+              title: Text(AppLocalizations.of(context)!.filterIssues),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Category'),
+                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.category),
                       value: tempCategory,
                       items: [
-                        const DropdownMenuItem<String>(value: null, child: Text('All Categories')),
+                        DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allCategories)),
                         ..._fetchedFilterCategories.map((CategoryModel category) => DropdownMenuItem<String>(value: category.name, child: Text(category.name)))
                       ],
                       onChanged: (String? newValue) => setDialogState(() => tempCategory = newValue),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Urgency'),
+                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.urgency),
                       value: tempUrgency,
-                      items: [const DropdownMenuItem<String>(value: null, child: Text('All Urgencies')), ..._allUrgencyLevels.map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))],
+                      items: [DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allUrgencies)), ..._allUrgencyLevels.map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))],
                       onChanged: (String? newValue) => setDialogState(() => tempUrgency = newValue),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Status'),
+                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.status),
                       value: tempStatus,
-                      items: [const DropdownMenuItem<String>(value: null, child: Text('All Statuses')), ..._allStatuses.map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))],
+                      items: [DropdownMenuItem<String>(value: null, child: Text(AppLocalizations.of(context)!.allStatus)), ..._allStatuses.map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))],
                       onChanged: (String? newValue) => setDialogState(() => tempStatus = newValue),
                     ),
                   ],
@@ -301,7 +301,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Clear Filters'),
+                  child: Text(AppLocalizations.of(context)!.clearAll),
                   onPressed: () {
                     if (mounted) {
                       setState(() {
@@ -316,7 +316,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
                   },
                 ),
                 ElevatedButton(
-                  child: const Text('Apply'),
+                  child: Text(AppLocalizations.of(context)!.applyFilters),
                   onPressed: () {
                      if (mounted) {
                         setState(() {
@@ -345,9 +345,9 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
           return SafeArea(
             child: Wrap(
               children: <Widget>[
-                ListTile(leading: Icon(_currentSortBy == 'timestamp' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: const Text('Sort by Date'), onTap: () => _applySort('timestamp')),
-                ListTile(leading: Icon(_currentSortBy == 'urgency' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: const Text('Sort by Urgency'), onTap: () => _applySort('urgency')),
-                ListTile(leading: Icon(_currentSortBy == 'upvotes' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: const Text('Sort by Upvotes'), onTap: () => _applySort('upvotes')),
+                ListTile(leading: Icon(_currentSortBy == 'timestamp' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: Text(AppLocalizations.of(context)!.sortByDate), onTap: () => _applySort('timestamp')),
+                ListTile(leading: Icon(_currentSortBy == 'urgency' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: Text(AppLocalizations.of(context)!.sortByUrgency), onTap: () => _applySort('urgency')),
+                ListTile(leading: Icon(_currentSortBy == 'upvotes' ? (_isSortDescending ? Icons.arrow_downward : Icons.arrow_upward) : null), title: Text(AppLocalizations.of(context)!.sortByUpvote), onTap: () => _applySort('upvotes')),
               ],
             ),
           );
@@ -448,24 +448,24 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
             ),
           ),
           const SizedBox(height: 20),
-          _buildProfileOptionTile(context, icon: Icons.edit_outlined, title: 'Edit Profile', onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit Profile - Coming Soon!")));
+          _buildProfileOptionTile(context, icon: Icons.edit_outlined, title: AppLocalizations.of(context)!.editProfile, onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.editProfile} - Coming Soon!")));
           }),
-          _buildProfileOptionTile(context, icon: Icons.lock_outline_rounded, title: 'Change Password', onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Change Password - Coming Soon!")));
+          _buildProfileOptionTile(context, icon: Icons.lock_outline_rounded, title: AppLocalizations.of(context)!.changePassword, onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.changePassword} - Coming Soon!")));
           }),
-          _buildProfileOptionTile(context, icon: Icons.history_edu_outlined, title: 'My Activity Log', onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("My Activity - Coming Soon!")));
+          _buildProfileOptionTile(context, icon: Icons.history_edu_outlined, title: AppLocalizations.of(context)!.myActivityLog, onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.myActivityLog} - Coming Soon!")));
           }),
-           _buildProfileOptionTile(context, icon: Icons.notifications_none_outlined, title: 'Notification Settings', onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Notification Settings - Coming Soon!")));
+           _buildProfileOptionTile(context, icon: Icons.notifications_none_outlined, title: AppLocalizations.of(context)!.notificationSetting, onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.notificationSetting} - Coming Soon!")));
           }),
           const Divider(height: 30, indent: 20, endIndent: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.logout_rounded, size: 20),
-              label: const Text("Logout", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade400,
                 foregroundColor: Colors.white,
@@ -522,7 +522,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text('No issues match current filters for $_departmentName.', style: TextStyle(fontSize: 16, color: Colors.grey[700]), textAlign: TextAlign.center,),
+            child: Text(AppLocalizations.of(context)!.noIssuesMatchFilters(_departmentName!), style: TextStyle(fontSize: 16, color: Colors.grey[700]), textAlign: TextAlign.center,),
           ));
         }
 

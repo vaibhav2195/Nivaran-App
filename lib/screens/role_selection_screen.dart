@@ -87,7 +87,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                 _buildOrDivider(context),
                 SizedBox(height: screenHeight * 0.015),
                 AuthButton( 
-                  text: 'Public Dashboard', // This is not in the localization file
+                  text: AppLocalizations.of(context)!.publicDashboard,
       
                   backgroundColor: Colors.grey.shade200,
                   textColor: Colors.black,
@@ -99,7 +99,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                  Padding(
                    padding: const EdgeInsets.only(bottom: 20.0),
                    child: Text(
-                    "NIVARAN - Your Voice, Our Action.", // This is not in the localization file
+                    AppLocalizations.of(context)!.yourVoiceOurAction,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                    ),
