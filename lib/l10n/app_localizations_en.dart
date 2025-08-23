@@ -432,4 +432,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourVoiceOurAction => 'Your Voice Our Action';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get issueSavedOffline =>
+      'Issue saved offline. It will be synced when online.';
+
+  @override
+  String get syncingIssues => 'Syncing issues...';
+
+  @override
+  String get offlineMode => 'Offline Mode';
+
+  @override
+  String get unsyncedIssues => 'Unsynced Issues';
+
+  @override
+  String get viewDetails => 'View Details';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get issueSavedLocally => 'Issue saved locally';
+
+  @override
+  String get issueSyncedSuccessfully => 'Issue synced successfully';
+
+  @override
+  String get errorSyncingIssue => 'Error syncing issue';
+
+  @override
+  String get noUnsyncedIssues => 'No unsynced issues';
+
+  @override
+  String get defaultUrgencyMediumOffline => 'Default Urgency: Medium (Offline)';
+
+  @override
+  String get noIssuesToDisplay => 'No issues to display';
+
+  @override
+  String get myReportedIssues => 'My Reported Issues';
+
+  @override
+  String get deleteIssue => 'Delete Issue?';
+
+  @override
+  String get deleteIssueConfirmation =>
+      'Are you sure you want to delete this issue? This action cannot be undone.';
 }

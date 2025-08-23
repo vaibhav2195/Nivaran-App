@@ -128,4 +128,10 @@ class UserProfileService with ChangeNotifier {
     notifyListeners();
     developer.log("UserProfileService: Profile cleared.", name: "UserProfileService");
   }
+  Future<bool> hasCachedUserProfile() async {
+    // This is a simplified check. In a real app, you might check Isar for a cached user.
+    // For now, we'll assume if _currentUserProfile is not null, it's "cached".
+    // A more robust solution would involve checking a local database like Isar.
+    return _currentUserProfile != null;
+  }
 }

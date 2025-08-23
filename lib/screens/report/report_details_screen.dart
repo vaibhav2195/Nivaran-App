@@ -10,8 +10,11 @@ import '../../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:connectivity_plus/connectivity_plus.dart'; // Import for ConnectivityResult
 
 import '../../services/image_upload_service.dart';
+import '../../services/offline_sync_service.dart';
+import '../../services/connectivity_service.dart';
 import '../../services/location_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/user_profile_service.dart';
@@ -46,11 +49,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   
   Position? _currentPosition;
   String? _currentAddress;
-  String? _detectedUrgency;
+  String _detectedUrgency = 'Medium';
   
   List<CategoryModel> _fetchedCategories = [];
   CategoryModel? _selectedCategoryModel;
 
+  late final OfflineSyncService _offlineSyncService;
+  late final ConnectivityService _connectivityService;
   final LocationService _locationService = LocationService();
   final ImageUploadService _imageUploadService = ImageUploadService();
   final FirestoreService _firestoreService = FirestoreService();
@@ -60,6 +65,8 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+    _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
     _fetchInitialData();
   }
 
@@ -107,19 +114,30 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       }
 
       // Step 3: Perform AI analysis
-      if (widget.imagePath.isNotEmpty && _currentPosition != null) {
-        if (mounted) {
-          setState(() {
-            _analysisStatus = AppLocalizations.of(context)!.analyzingImageWithAI;
-          });
+      final connectivityResult = await _connectivityService.checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        if (widget.imagePath.isNotEmpty && _currentPosition != null) {
+          if (mounted) {
+            setState(() {
+              _analysisStatus = AppLocalizations.of(context)!.analyzingImageWithAI;
+            });
+          }
+          developer.log('Step 3: Starting AI analysis...', name: 'ReportDetailsScreen');
+          await _performAIAnalysis();
+        } else {
+          developer.log('Skipping AI analysis - missing image or location', name: 'ReportDetailsScreen');
+          if (mounted) {
+            setState(() {
+              _analysisStatus = "Manual entry required - missing data for AI analysis";
+            });
+          }
         }
-        developer.log('Step 3: Starting AI analysis...', name: 'ReportDetailsScreen');
-        await _performAIAnalysis();
       } else {
-        developer.log('Skipping AI analysis - missing image or location', name: 'ReportDetailsScreen');
+        developer.log('Skipping AI analysis - offline', name: 'ReportDetailsScreen');
         if (mounted) {
           setState(() {
-            _analysisStatus = "Manual entry required - missing data for AI analysis";
+            _analysisStatus = "Offline mode: AI analysis skipped. Urgency defaulted to Medium.";
+            _detectedUrgency = 'Medium'; // Default to Medium when offline
           });
         }
       }
@@ -499,80 +517,95 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
     setState(() => _isSubmitting = true);
 
     try {
-      // Get the image data as a Base64 string
-      final imageBytes = await File(widget.imagePath).readAsBytes();
-      final base64Image = base64Encode(imageBytes);
+      final connectivityResult = await _connectivityService.checkConnectivity();
 
-      // Use Gemini API directly for duplicate detection instead of Cloud Function
-      final isDuplicate = await _checkForDuplicatesWithGemini(
-        base64Image, 
-        _descriptionController.text.trim()
-      );
-      
-      // If it's a duplicate, find the most similar issue
-      String? existingIssueId;
-      String? existingIssueTitle;
-      
-      if (isDuplicate) {
-        // Query recent issues to find the most similar one
-        final recentIssues = await FirebaseFirestore.instance
-            .collection('issues')
-            .orderBy('timestamp', descending: true)
-            .limit(10)
-            .get();
-            
-        if (recentIssues.docs.isNotEmpty) {
-          // For simplicity, we'll just use the most recent issue
-          // In a production app, you might want to implement more sophisticated matching
-          final mostRecentIssue = recentIssues.docs.first;
-          existingIssueId = mostRecentIssue.id;
-          existingIssueTitle = mostRecentIssue.data()['title'] as String? ?? 'Untitled Issue';
-        }
-      }
-
-      // Handle the response
-      if (isDuplicate && existingIssueId != null) {
-        if (!mounted) return;
-        
-        // Show dialog for duplicate found
-        final result = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Similar Issue Found"),
-            content: Text(
-              "This seems related to an existing report:\n\n'${existingIssueTitle ?? 'Untitled Issue'}'\n\nWould you like to add your photo and info as evidence to it?"
-            ),
-            actions: [
-              TextButton(
-                child: const Text("Create New Anyway"),
-                onPressed: () => Navigator.of(ctx).pop(false),
-              ),
-              ElevatedButton(
-                child: const Text("Yes, Add to Existing"),
-                onPressed: () => Navigator.of(ctx).pop(true),
-              ),
-            ],
-          ),
-        );
-
-        if (result == true) {
-          // User chose to collaborate
-          if (!mounted) return;
-          final issueDoc = await FirebaseFirestore.instance.collection('issues').doc(existingIssueId).get();
-          if (issueDoc.exists) {
-            if (!mounted) return;
-            final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
-            Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              IssueCollaborationScreen(issueId: existingIssueId!, issue: existingIssue)
-            ));
-          }
-        } else {
-          // User chose to create new anyway
-          await _createNewIssue(isDuplicateOf: existingIssueId);
+      if (connectivityResult == ConnectivityResult.none) {
+        // Offline: Save locally
+        await _saveIssueLocally(appUser);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.issueSavedOffline)),
+          );
+          String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
+          Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
         }
       } else {
-        // No duplicate found
-        await _createNewIssue();
+        // Online: Proceed with existing upload logic
+        // Get the image data as a Base64 string
+        final imageBytes = await File(widget.imagePath).readAsBytes();
+        final base64Image = base64Encode(imageBytes);
+
+        // Use Gemini API directly for duplicate detection instead of Cloud Function
+        final isDuplicate = await _checkForDuplicatesWithGemini(
+          base64Image,
+          _descriptionController.text.trim()
+        );
+        
+        // If it's a duplicate, find the most similar issue
+        String? existingIssueId;
+        String? existingIssueTitle;
+        
+        if (isDuplicate) {
+          // Query recent issues to find the most similar one
+          final recentIssues = await FirebaseFirestore.instance
+              .collection('issues')
+              .orderBy('timestamp', descending: true)
+              .limit(10)
+              .get();
+              
+          if (recentIssues.docs.isNotEmpty) {
+            // For simplicity, we'll just use the most recent issue
+            // In a production app, you might want to implement more sophisticated matching
+            final mostRecentIssue = recentIssues.docs.first;
+            existingIssueId = mostRecentIssue.id;
+            existingIssueTitle = mostRecentIssue.data()['title'] as String? ?? 'Untitled Issue';
+          }
+        }
+
+        // Handle the response
+        if (isDuplicate && existingIssueId != null) {
+          if (!mounted) return;
+          
+          // Show dialog for duplicate found
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text("Similar Issue Found"),
+              content: Text(
+                "This seems related to an existing report:\n\n'${existingIssueTitle ?? 'Untitled Issue'}'\n\nWould you like to add your photo and info as evidence to it?"
+              ),
+              actions: [
+                TextButton(
+                  child: const Text("Create New Anyway"),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                ),
+                ElevatedButton(
+                  child: const Text("Yes, Add to Existing"),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                ),
+              ],
+            ),
+          );
+
+          if (result == true) {
+            // User chose to collaborate
+            if (!mounted) return;
+            final issueDoc = await FirebaseFirestore.instance.collection('issues').doc(existingIssueId).get();
+            if (issueDoc.exists) {
+              if (!mounted) return;
+              final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
+              Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                IssueCollaborationScreen(issueId: existingIssueId!, issue: existingIssue)
+              ));
+            }
+          } else {
+            // User chose to create new anyway
+            await _createNewIssue(appUser, isDuplicateOf: existingIssueId);
+          }
+        } else {
+          // No duplicate found
+          await _createNewIssue(appUser);
+        }
       }
     } on FirebaseFunctionsException catch (e) {
       developer.log("Cloud function error: ${e.message}", name: "ReportDetailsScreen", error: e);
@@ -580,7 +613,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error checking for duplicates: ${e.message}. Submitting as new issue.")),
         );
-        await _createNewIssue();
+        await _createNewIssue(appUser);
       }
     } catch (e) {
       developer.log("Error during submission process: $e", name: "ReportDetailsScreen", error: e);
@@ -588,7 +621,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("An error occurred: $e. Submitting as new issue.")),
         );
-        await _createNewIssue();
+        await _createNewIssue(appUser);
       }
     } finally {
       if (mounted) {
@@ -597,11 +630,42 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
     }
   }
 
-  Future<void> _createNewIssue({String? isDuplicateOf}) async {
-    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
-    final AppUser? appUser = userProfileService.currentUserProfile;
+  Future<void> _saveIssueLocally(AppUser appUser) async {
+    if (_currentPosition == null || _selectedCategoryModel == null) return;
 
-    if (appUser == null || _currentPosition == null || _selectedCategoryModel == null) return;
+    final List<String> tagsList = _tagsController.text.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
+
+    final issueToSave = Issue(
+      id: '', // ID will be generated by Isar
+      description: _descriptionController.text.trim(),
+      category: _selectedCategoryModel!.name,
+      urgency: _detectedUrgency,
+      tags: tagsList.isNotEmpty ? tagsList : null,
+      imageUrl: '', // No remote URL when offline
+      timestamp: Timestamp.now(),
+      location: LocationModel(
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude,
+        address: _currentAddress ?? 'Address not available',
+      ),
+      userId: appUser.uid,
+      username: appUser.username!,
+      status: 'Pending Sync',
+      isUnresolved: true,
+      assignedDepartment: _selectedCategoryModel!.defaultDepartment,
+      upvotes: 0,
+      downvotes: 0,
+      voters: {},
+      commentsCount: 0,
+      affectedUsersCount: 1,
+      affectedUserIds: [appUser.uid],
+    );
+
+    await _offlineSyncService.saveIssueLocally(issueToSave, widget.imagePath);
+  }
+
+  Future<void> _createNewIssue(AppUser appUser, {String? isDuplicateOf}) async {
+    if (_currentPosition == null || _selectedCategoryModel == null) return;
 
     try {
       final String? imageUrl = await _imageUploadService.uploadImage(File(widget.imagePath));
@@ -613,7 +677,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
       final Map<String, dynamic> issueData = {
         'description': _descriptionController.text.trim(),
         'category': _selectedCategoryModel!.name,
-        'urgency': _detectedUrgency ?? 'Medium',
+        'urgency': _detectedUrgency,
         'tags': tagsList.isNotEmpty ? tagsList : null,
         'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
@@ -809,51 +873,56 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     
-                    // Urgency (AI-determined, read-only)
-                    Text(AppLocalizations.of(context)!.description, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    // Urgency (AI-determined, read-only when online, defaulted to Medium when offline)
+                    Text(AppLocalizations.of(context)!.urgency, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: _isDetectingUrgency ? Colors.yellow[50] : (_detectedUrgency == null ? Colors.grey[100] : _getUrgencyColor(_detectedUrgency!).withAlpha(26)),
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: _isDetectingUrgency ? Colors.orange.shade300 : 
-                                 (_detectedUrgency == null ? Colors.grey[350]! : _getUrgencyColor(_detectedUrgency!))
-                        )
-                      ),
-                      child: Row(
-                        children: [
-                          if (_detectedUrgency != null) ...[
-                            Icon(
-                              _getUrgencyIcon(_detectedUrgency!),
-                              color: _getUrgencyColor(_detectedUrgency!),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          Expanded(
-                            child: Text(
-                              _isDetectingUrgency ? AppLocalizations.of(context)!.description :
-                              (_detectedUrgency ?? AppLocalizations.of(context)!.description),
-                              style: textTheme.bodyLarge?.copyWith(
-                                fontSize: 15,
-                                color: _isDetectingUrgency ? Colors.orange.shade800 : 
-                                       (_detectedUrgency == null ? Colors.grey[700] : _getUrgencyColor(_detectedUrgency!)),
-                                fontStyle: _detectedUrgency == null && !_isDetectingUrgency ? FontStyle.italic : FontStyle.normal,
-                                fontWeight: _detectedUrgency != null ? FontWeight.w600 : FontWeight.normal,
-                              ),
-                            ),
+                    StreamBuilder<ConnectivityResult>(
+                      stream: Provider.of<ConnectivityService>(context).connectivityStream,
+                      builder: (context, snapshot) {
+                        final isOffline = snapshot.data == ConnectivityResult.none;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isOffline ? Colors.grey[200] : (_isDetectingUrgency ? Colors.yellow[50] : (_detectedUrgency == null ? Colors.grey[100] : _getUrgencyColor(_detectedUrgency!).withAlpha(26))),
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(
+                              color: isOffline ? Colors.grey[400]! : (_isDetectingUrgency ? Colors.orange.shade300 :
+                                     (_detectedUrgency == null ? Colors.grey[350]! : _getUrgencyColor(_detectedUrgency!)))
+                            )
                           ),
-                          if (_detectedUrgency != null)
-                            Icon(
-                              Icons.lock_outline,
-                              color: Colors.grey[600],
-                              size: 16,
-                            ),
-                        ],
-                      ),
+                          child: Row(
+                            children: [
+                              if (_detectedUrgency != null) ...[
+                                Icon(
+                                  _getUrgencyIcon(_detectedUrgency!),
+                                  color: isOffline ? Colors.grey[600] : _getUrgencyColor(_detectedUrgency!),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  isOffline ? AppLocalizations.of(context)!.medium : (_isDetectingUrgency ? "Detecting urgency..." :
+                                  (_detectedUrgency ?? "Not determined")),
+                                  style: textTheme.bodyLarge?.copyWith(
+                                    fontSize: 15,
+                                    color: isOffline ? Colors.grey[600] : (_isDetectingUrgency ? Colors.orange.shade800 :
+                                           (_detectedUrgency == null ? Colors.grey[700] : _getUrgencyColor(_detectedUrgency!))),
+                                    fontStyle: _detectedUrgency == null && !_isDetectingUrgency && !isOffline ? FontStyle.italic : FontStyle.normal,
+                                    fontWeight: _detectedUrgency != null || isOffline ? FontWeight.w600 : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.lock_outline,
+                                color: Colors.grey[600],
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(height: screenHeight * 0.03),
 

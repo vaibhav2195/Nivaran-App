@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart'; // Add this import for pie chart
 import '../l10n/app_localizations.dart';
-import '../../models/issue_model.dart'; // Add this import for Issue model
+import '../models/issue_model.dart'; // Add this import for Issue model
 import 'dart:developer' as developer; // For logging
 import '../services/predictive_maintenance_service.dart';
 // Removed: import 'dart:math' show sqrt;

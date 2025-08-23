@@ -17,7 +17,8 @@ import 'dart:developer' as developer;
 
 class IssueCard extends StatefulWidget {
   final Issue issue;
-  const IssueCard({super.key, required this.issue});
+  final VoidCallback? onDelete;
+  const IssueCard({super.key, required this.issue, this.onDelete});
 
   @override
   State<IssueCard> createState() => _IssueCardState();
@@ -581,6 +582,13 @@ class _IssueCardState extends State<IssueCard> {
                     ],
                   ),
                 ),
+                if (widget.onDelete != null) ...[
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+                    onPressed: widget.onDelete,
+                  ),
+                ]
               ],
             ),
             SizedBox(height: widget.issue.description.isNotEmpty ? 8 : 4),

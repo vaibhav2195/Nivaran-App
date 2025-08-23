@@ -10,7 +10,7 @@ plugins {
 buildscript {
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
-        classpath("com.android.tools.build:gradle:8.2.2")
+        classpath("com.android.tools.build:gradle:8.7.0")
 
     }
 
@@ -43,4 +43,12 @@ subprojects {
 // Clean task
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
+}
+
+subprojects {
+    if (project.name == "isar_flutter_libs") {
+        plugins.withId("com.android.library") {
+            extensions.getByType(com.android.build.gradle.LibraryExtension::class.java).namespace = "dev.isar.isar_flutter_libs"
+        }
+    }
 }

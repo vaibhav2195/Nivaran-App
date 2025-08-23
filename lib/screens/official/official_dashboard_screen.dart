@@ -1,9 +1,9 @@
 // lib/screens/official/official_dashboard_screen.dart
 import 'dart:async'; // Added for StreamSubscription
 import 'package:flutter/material.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/user_profile_service.dart';
 import '../../utils/update_checker.dart';
 import '../../models/issue_model.dart';

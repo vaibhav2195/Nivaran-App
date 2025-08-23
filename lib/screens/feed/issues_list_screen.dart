@@ -6,10 +6,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'dart:developer' as developer;
 import 'package:modern_auth_app/l10n/app_localizations.dart';
+import 'package:provider/provider.dart'; // Add provider import
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../widgets/issue_card.dart'; // Uses IssueCard
 import '../../models/issue_model.dart';
+import '../../models/local_issue_model.dart'; // Import LocalIssue
 import '../../services/location_service.dart';
+import '../../services/offline_sync_service.dart'; // Import OfflineSyncService
+import '../../services/connectivity_service.dart'; // Import ConnectivityService
 import '../../utils/location_utils.dart';
 
 class IssuesListScreen extends StatefulWidget {
@@ -27,11 +32,49 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
   Position? _currentPosition; // Store current position for filtering
   static const double _proximityRadiusKm = 10.0; // 10km radius for proximity filtering
 
+  late OfflineSyncService _offlineSyncService;
+  late ConnectivityService _connectivityService;
+  bool _isOffline = false;
+  List<LocalIssue> _localIssues = [];
+
   @override
   void initState() {
     super.initState();
+    _offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+    _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+    _checkConnectivityAndLoadIssues();
+    _connectivityService.connectivityStream.listen((result) {
+      final isOffline = result == ConnectivityResult.none;
+      if (_isOffline != isOffline) {
+        setState(() {
+          _isOffline = isOffline;
+        });
+        _checkConnectivityAndLoadIssues(); // Re-check and load when connectivity changes
+      }
+    });
     _fetchCurrentLocationAndUpdateDisplay();
   }
+
+  Future<void> _checkConnectivityAndLoadIssues() async {
+    final connectivityResult = await _connectivityService.checkConnectivity();
+    setState(() {
+      _isOffline = connectivityResult == ConnectivityResult.none;
+    });
+
+    if (_isOffline) {
+      final localIssues = await _offlineSyncService.getUnsyncedIssues();
+      setState(() {
+        _localIssues = localIssues;
+      });
+    } else {
+      // When online, the StreamBuilder will handle loading from Firestore.
+      // We might want to clear local issues if they are now synced.
+      setState(() {
+        _localIssues = [];
+      });
+    }
+  }
+
 
   Future<void> _requestLocationPermission() async {
     var status = await Permission.locationWhenInUse.status;
@@ -193,74 +236,93 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('issues')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !_isFetchingLocation) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            developer.log('Firestore Error: ${snapshot.error}', name: 'IssuesListScreen');
-            return Center(child: Text(l10n!.issueDetails));
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No issues reported yet. Be the first!'));
-          }
+      body: _isOffline ? _buildOfflineBody(l10n) : _buildOnlineBody(l10n),
+    );
+  }
 
-          final issuesDocs = snapshot.data!.docs;
-          final List<Issue> allIssues = issuesDocs.map((doc) {
-            final issueData = doc.data() as Map<String, dynamic>;
-            return Issue.fromFirestore(issueData, doc.id);
-          }).toList();
+  Widget _buildOfflineBody(AppLocalizations? l10n) {
+    if (_localIssues.isEmpty) {
+      return const Center(child: Text("No locally saved issues."));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(8.0),
+      itemCount: _localIssues.length,
+      itemBuilder: (context, index) {
+        final localIssue = _localIssues[index];
+        final issue = Issue.fromLocalIssue(localIssue);
+        return IssueCard(issue: issue);
+      },
+    );
+  }
 
-          // Apply proximity filter if enabled and location is available
-          List<Issue> displayedIssues = allIssues;
-          if (_isProximityFilterEnabled && _currentPosition != null) {
-            displayedIssues = allIssues.where((issue) {
-              return LocationUtils.isLocationWithinRadius(
-                _currentPosition!.latitude,
-                _currentPosition!.longitude,
-                issue.location.latitude,
-                issue.location.longitude,
-                _proximityRadiusKm
-              );
-            }).toList();
-          }
+  Widget _buildOnlineBody(AppLocalizations? l10n) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('issues')
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !_isFetchingLocation) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          developer.log('Firestore Error: ${snapshot.error}', name: 'IssuesListScreen');
+          return Center(child: Text(l10n!.issueDetails));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('No issues reported yet. Be the first!'));
+        }
 
-          if (displayedIssues.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('No issues found in your area.'),
-                  if (_isProximityFilterEnabled)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isProximityFilterEnabled = false;
-                        });
-                      },
-                      child: Text(l10n!.issuesFeed),
-                    ),
-                ],
-              ),
+        final issuesDocs = snapshot.data!.docs;
+        final List<Issue> allIssues = issuesDocs.map((doc) {
+          final issueData = doc.data() as Map<String, dynamic>;
+          return Issue.fromFirestore(issueData, doc.id);
+        }).toList();
+
+        // Apply proximity filter if enabled and location is available
+        List<Issue> displayedIssues = allIssues;
+        if (_isProximityFilterEnabled && _currentPosition != null) {
+          displayedIssues = allIssues.where((issue) {
+            return LocationUtils.isLocationWithinRadius(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+              issue.location.latitude,
+              issue.location.longitude,
+              _proximityRadiusKm
             );
-          }
+          }).toList();
+        }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: displayedIssues.length,
-            itemBuilder: (context, index) {
-              final issue = displayedIssues[index];
-              // Each issue is rendered using IssueCard, which handles image display
-              return IssueCard(issue: issue);
-            },
+        if (displayedIssues.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('No issues found in your area.'),
+                if (_isProximityFilterEnabled)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isProximityFilterEnabled = false;
+                      });
+                    },
+                    child: Text(l10n!.issuesFeed),
+                  ),
+              ],
+            ),
           );
-        },
-      ),
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(8.0),
+          itemCount: displayedIssues.length,
+          itemBuilder: (context, index) {
+            final issue = displayedIssues[index];
+            // Each issue is rendered using IssueCard, which handles image display
+            return IssueCard(issue: issue);
+          },
+        );
+      },
     );
   }
 }

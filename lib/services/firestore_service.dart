@@ -27,6 +27,11 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs
             .map((doc) => Issue.fromFirestore(doc.data(), doc.id))
             .toList());
+   }
+
+  Future<List<Issue>> getIssues() async {
+    final snapshot = await _db.collection('issues').orderBy('timestamp', descending: true).get();
+    return snapshot.docs.map((doc) => Issue.fromFirestore(doc.data(), doc.id)).toList();
   }
 
   Future<void> voteIssue(String issueId, String userId, VoteType newVote) async {
@@ -207,5 +212,19 @@ class FirestoreService {
       developer.log('Error fetching distinct department names: $e', name: 'FirestoreService', error: e, stackTrace: s);
       return [];
     }
+  }
+
+  // --- NEW METHODS FOR USER'S REPORTED ISSUES ---
+  Future<List<Issue>> getIssuesByUserId(String userId) async {
+    final snapshot = await _db
+        .collection('issues')
+        .where('userId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => Issue.fromFirestore(doc.data(), doc.id)).toList();
+  }
+
+  Future<void> deleteIssue(String issueId) async {
+    await _db.collection('issues').doc(issueId).delete();
   }
 }

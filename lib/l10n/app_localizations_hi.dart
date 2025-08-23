@@ -432,4 +432,58 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get yourVoiceOurAction => 'आपकी आवाज हमारी कार्रवाई';
+
+  @override
+  String get language => 'भाषा';
+
+  @override
+  String get selectLanguage => 'भाषा चुनें';
+
+  @override
+  String get issueSavedOffline =>
+      'समस्या ऑफ़लाइन सहेजी गई। ऑनलाइन होने पर यह सिंक हो जाएगी।';
+
+  @override
+  String get syncingIssues => 'समस्याएं सिंक हो रही हैं...';
+
+  @override
+  String get offlineMode => 'ऑफलाइन मोड';
+
+  @override
+  String get unsyncedIssues => 'सिंक नहीं किए गए मुद्दे';
+
+  @override
+  String get viewDetails => 'विवरण देखें';
+
+  @override
+  String get delete => 'हटाएं';
+
+  @override
+  String get issueSavedLocally => 'समस्या स्थानीय रूप से सहेजी गई';
+
+  @override
+  String get issueSyncedSuccessfully => 'समस्या सफलतापूर्वक सिंक हो गई';
+
+  @override
+  String get errorSyncingIssue => 'समस्या सिंक करने में त्रुटि';
+
+  @override
+  String get noUnsyncedIssues => 'कोई सिंक नहीं किए गए मुद्दे नहीं';
+
+  @override
+  String get defaultUrgencyMediumOffline =>
+      'डिफ़ॉल्ट तात्कालिकता: मध्यम (ऑफ़लाइन)';
+
+  @override
+  String get noIssuesToDisplay => 'प्रदर्शित करने के लिए कोई समस्या नहीं';
+
+  @override
+  String get myReportedIssues => 'मेरे द्वारा रिपोर्ट की गई समस्याएं';
+
+  @override
+  String get deleteIssue => 'समस्या हटाएं?';
+
+  @override
+  String get deleteIssueConfirmation =>
+      'क्या आप वाकई इस समस्या को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।';
 }

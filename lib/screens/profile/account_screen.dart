@@ -1,10 +1,13 @@
 // lib/screens/profile/account_screen.dart
 import 'package:flutter/material.dart';
+import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_profile_service.dart';
 import '../../models/app_user_model.dart';
+import '../../services/locale_provider.dart';
+import '../initial_route_manager.dart';
+import 'my_reported_issues_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -181,8 +184,19 @@ class AccountScreen extends StatelessWidget {
             icon: Icons.list_alt_outlined,
             title: AppLocalizations.of(context)!.myIssues,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("My Issues - Coming Soon!")));
+              Navigator.push(
+               context,
+               MaterialPageRoute(builder: (context) => const MyReportedIssuesScreen()),
+             );
             }
+          ),
+          _buildListTile(
+            context: context,
+            icon: Icons.sync_problem_outlined,
+            title: "Unsynced Issues",
+            onTap: () {
+              Navigator.pushNamed(context, '/unsynced_issues');
+            },
           ),
 
           const SizedBox(height: 10),
@@ -211,26 +225,58 @@ class AccountScreen extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App Settings - Coming Soon!")));
             }
           ),
-
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.logout, color: Colors.red),
-              label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.red.shade300),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () => _logout(context),
+          _buildListTile(
+            context: context,
+            icon: Icons.language,
+            title: AppLocalizations.of(context)!.language,
+            trailing: DropdownButton<Locale>(
+              value: Provider.of<LocaleProvider>(context).locale,
+              icon: const Icon(Icons.arrow_drop_down),
+              onChanged: (Locale? newLocale) {
+                if (newLocale != null) {
+                  Provider.of<LocaleProvider>(context, listen: false).setLocale(newLocale);
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const InitialRouteManager()),
+                        (route) => false,
+                  );
+                }
+              },
+              items: const [
+                DropdownMenuItem(
+                  value: Locale('en'),
+                  child: Text("English"),
+                ),
+                DropdownMenuItem(
+                  value: Locale('hi'),
+                  child: Text("हिंदी"),
+                ),
+              ],
             ),
+            onTap: () {
+              // The dropdown handles the tap, so this can be empty or show a snackbar
+            },
           ),
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
+
+        const SizedBox(height: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.red.shade300),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => _logout(context),
+          ),
+        ),
+        const SizedBox(height: 30),
+      ],
+    ),
+  );
+}
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(

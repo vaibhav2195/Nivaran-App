@@ -56,7 +56,6 @@ class _OfficialSetPasswordScreenState extends State<OfficialSetPasswordScreen> {
   }
 
   String? _validateConfirmPassword(String? value) {
-    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return 'Please confirm your new password.';
     if (value != _passwordController.text) return 'Passwords do not match.';
     return null;

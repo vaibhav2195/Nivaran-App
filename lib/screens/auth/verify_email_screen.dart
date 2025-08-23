@@ -144,8 +144,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final User? currentUser = _auth.currentUser;
-    final String userEmail = currentUser?.email ?? "your email address";
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final textTheme = Theme.of(context).textTheme;

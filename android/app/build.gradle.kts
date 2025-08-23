@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.modern_auth_app" // Ensure this matches your actual package name
-    compileSdk = flutter.compileSdkVersion // Uses the Flutter-defined compile SDK version
+    compileSdk = 35
 
     ndkVersion = "27.0.12077973" // Keep your specified NDK version
 
@@ -30,7 +30,7 @@ android {
     defaultConfig {
         applicationId = "com.modern_auth_app" // Ensure this matches
         minSdk = 24 // Your current minSdk
-        targetSdk = flutter.targetSdkVersion // Uses Flutter-defined target SDK (e.g., 33 or 34)
+        targetSdk = 33
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true // ADDED: Good to have, especially with many dependencies

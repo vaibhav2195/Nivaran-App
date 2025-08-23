@@ -901,6 +901,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Voice Our Action'**
   String get yourVoiceOurAction;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @issueSavedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue saved offline. It will be synced when online.'**
+  String get issueSavedOffline;
+
+  /// No description provided for @syncingIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing issues...'**
+  String get syncingIssues;
+
+  /// No description provided for @offlineMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode'**
+  String get offlineMode;
+
+  /// No description provided for @unsyncedIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsynced Issues'**
+  String get unsyncedIssues;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetails;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @issueSavedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue saved locally'**
+  String get issueSavedLocally;
+
+  /// No description provided for @issueSyncedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue synced successfully'**
+  String get issueSyncedSuccessfully;
+
+  /// No description provided for @errorSyncingIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Error syncing issue'**
+  String get errorSyncingIssue;
+
+  /// No description provided for @noUnsyncedIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'No unsynced issues'**
+  String get noUnsyncedIssues;
+
+  /// No description provided for @defaultUrgencyMediumOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Urgency: Medium (Offline)'**
+  String get defaultUrgencyMediumOffline;
+
+  /// No description provided for @noIssuesToDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'No issues to display'**
+  String get noIssuesToDisplay;
+
+  /// No description provided for @myReportedIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'My Reported Issues'**
+  String get myReportedIssues;
+
+  /// No description provided for @deleteIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Issue?'**
+  String get deleteIssue;
+
+  /// No description provided for @deleteIssueConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this issue? This action cannot be undone.'**
+  String get deleteIssueConfirmation;
 }
 
 class _AppLocalizationsDelegate

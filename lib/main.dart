@@ -1,11 +1,13 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // <-- ADDED
 import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-//import 'l10n/app_localizations_en.dart';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart'; // Import ConnectivityResult
+import 'models/local_issue_model.dart';
 import 'services/locale_provider.dart';
 import 'screens/initial_route_manager.dart';
 import 'screens/language_selection_screen.dart';
@@ -13,6 +15,9 @@ import 'services/auth_service.dart';
 import 'services/user_profile_service.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
+import 'services/connectivity_service.dart'; // Add ConnectivityService import
+import 'services/firestore_service.dart'; // Add FirestoreService import
+import 'services/image_upload_service.dart'; // Add ImageUploadService import
 import 'screens/role_selection_screen.dart';
 import 'screens/auth/auth_options_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -27,6 +32,7 @@ import 'screens/main_app_scaffold.dart';
 import 'screens/public_dashboard_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/feed/issue_details_screen.dart';
+import 'screens/profile/unsynced_issues_screen.dart';
 import 'dart:developer' as developer;
 
 
@@ -42,14 +48,23 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 // Global navigator key
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+late Isar isar; // Declare Isar instance globally
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // .env file loading removed - using hardcoded values from secrets.dart
   
-  await Firebase.initializeApp(); 
+  await Firebase.initializeApp();
   
+  // Initialize Isar
+  final dir = await getApplicationDocumentsDirectory();
+  isar = await Isar.open(
+    [LocalIssueSchema],
+    directory: dir.path,
+    inspector: true, // Enable Isar Inspector for debugging
+  );
+
   // Set the background messaging handler for FCM
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -60,16 +75,20 @@ void main() async {
         ChangeNotifierProvider<UserProfileService>(create: (_) => UserProfileService()),
         Provider<NotificationService>(create: (_) => NotificationService(navigatorKey: navigatorKey)),
         ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
-        ChangeNotifierProxyProvider<UserProfileService, OfflineSyncService>(
-          create: (_) => OfflineSyncService(),
-          update: (_, userService, offlineService) {
-            // Initialize or update offline service with user data when available
-            if (userService.currentUserProfile != null && offlineService != null) {
-              offlineService.setCurrentUser(userService.currentUserProfile!.uid);
-              // Refresh cached issues when user is available
-              offlineService.refreshCachedIssues();
-            }
-            return offlineService ?? OfflineSyncService();
+        Provider<ConnectivityService>(create: (_) => ConnectivityService()), // Add ConnectivityService
+        Provider<FirestoreService>(create: (_) => FirestoreService()), // Add FirestoreService
+        Provider<ImageUploadService>(create: (_) => ImageUploadService()), // Add ImageUploadService
+        ChangeNotifierProxyProvider5<UserProfileService, ConnectivityService, AuthService, FirestoreService, ImageUploadService, OfflineSyncService>(
+          create: (context) => OfflineSyncService(
+            isar, // Pass the global Isar instance
+            Provider.of<ConnectivityService>(context, listen: false),
+            Provider.of<AuthService>(context, listen: false),
+            Provider.of<FirestoreService>(context, listen: false),
+            Provider.of<ImageUploadService>(context, listen: false),
+          ),
+          update: (context, userService, connectivityService, authService, firestoreService, imageUploadService, offlineService) {
+            // No need to set user here, as OfflineSyncService gets Auth and handles it internally
+            return offlineService ?? OfflineSyncService(isar, connectivityService, authService, firestoreService, imageUploadService);
           },
         ),
       ],
@@ -91,16 +110,21 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     // Initialize NotificationService after build, once providers are available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         final notificationService = Provider.of<NotificationService>(context, listen: false);
-        notificationService.initialize().then((_) {
+        await notificationService.initialize().then((_) {
             developer.log("NotificationService initialized from MyApp", name: "MyApp");
-            // After initialization, UserProfileService might need to update the token
-            // This is handled within UserProfileService's auth state listener now.
         }).catchError((e) {
             developer.log("Error initializing NotificationService from MyApp: $e", name: "MyApp");
         });
+
+        final offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+        if (!mounted) return;
+        await offlineSyncService.initialize();
+        if (!mounted) return;
+        await offlineSyncService.refreshCachedIssues();
+        developer.log("OfflineSyncService initialized and cached issues refreshed from MyApp", name: "MyApp");
       }
     });
   }
@@ -226,6 +250,7 @@ class _MyAppState extends State<MyApp> {
         },
 
         '/public_dashboard': (context) => const PublicDashboardScreen(),
+        '/unsynced_issues': (context) => const UnsyncedIssuesScreen(),
       },
     );
   }
@@ -248,12 +273,38 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
   }
 
   Future<void> _handleAuthChanged() async {
+    final connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+    final offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+
+    final connectivityResult = await connectivityService.checkConnectivity();
+    final isOffline = connectivityResult == ConnectivityResult.none;
+
+    if (isOffline) {
+      // Try to load cached user profile or issues
+      final hasCachedProfile = await userProfileService.hasCachedUserProfile();
+      final hasCachedIssues = await offlineSyncService.hasCachedIssues();
+
+      if (hasCachedProfile || hasCachedIssues) {
+        // Navigate to the main app or official dashboard if cached data exists
+        // This assumes that if a profile is cached, it's a valid one to proceed with.
+        // For simplicity, we'll navigate to the main app scaffold.
+        // A more robust solution might check the cached user's role.
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
+      } else {
+        // No cached data, navigate to a screen that doesn't require network
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
+      }
+      return;
+    }
+
+    // If online, proceed with existing Firebase authentication logic
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
 
     if (user != null) {
-      final userProfileService = Provider.of<UserProfileService>(context, listen: false);
-      
       // Ensure profile is loaded
       if (userProfileService.currentUserProfile?.uid != user.uid) {
         await userProfileService.fetchAndSetCurrentUserProfile();
@@ -284,6 +335,7 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
         Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
       }
     } else {
+      if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
     }
   }
