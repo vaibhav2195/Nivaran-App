@@ -152,5 +152,8 @@
   "deleteIssue": "समस्या हटाएं?",
   "deleteIssueConfirmation": "क्या आप वाकई इस समस्या को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।",
   "delete": "हटाएं",
-  "cancel": "रद्द करें"
+  "cancel": "रद्द करें",
+  "locationUnavailable": "स्थान अनुपलब्ध",
+  "locationError": "स्थान त्रुटि",
+  "cachedData": "कैश्ड डेटा"
 }

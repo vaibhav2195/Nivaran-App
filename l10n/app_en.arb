@@ -153,5 +153,8 @@
   "deleteIssue": "Delete Issue?",
   "deleteIssueConfirmation": "Are you sure you want to delete this issue? This action cannot be undone.",
   "delete": "Delete",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "locationUnavailable": "Location Unavailable",
+  "locationError": "Location Error",
+  "cachedData": "Cached Data"
 }
