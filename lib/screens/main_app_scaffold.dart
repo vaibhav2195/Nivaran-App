@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/user_profile_service.dart';
+import '../services/offline_sync_service.dart';
 import 'feed/issues_list_screen.dart';
 import 'report/camera_capture_screen.dart';
 import 'profile/account_screen.dart';
@@ -11,6 +12,7 @@ import 'map/map_view_screen.dart';
 import 'notifications/notifications_screen.dart';
 import 'impact/community_impact_screen.dart';
 import '../widgets/offline_banner.dart';
+import '../widgets/sync_status_widget.dart';
 import '../utils/update_checker.dart';
 import 'dart:developer' as developer;
 
@@ -58,22 +60,57 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
         }
       }
     });
+
+    // Listen to sync status changes and show snackbar notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+        offlineSyncService.addListener(() {
+          if (mounted && offlineSyncService.syncStatus.isNotEmpty) {
+            // Show snackbar for important sync status updates
+            if (offlineSyncService.syncStatus.contains('complete') ||
+                offlineSyncService.syncStatus.contains('failed') ||
+                (offlineSyncService.isSyncing && offlineSyncService.totalToSync > 0)) {
+              SyncStatusSnackBar.show(context, offlineSyncService);
+            }
+          }
+        });
+      }
+    });
   }
 
   Future<void> _performInitialChecks() async {
     // Store the context and service reference before any async operations
     if (!mounted) return;
+    
+    // Store references early to avoid widget lifecycle issues
     final currentContext = context;
-    final userProfileService = Provider.of<UserProfileService>(currentContext, listen: false);
+    UserProfileService? userProfileService;
+    try {
+      userProfileService = Provider.of<UserProfileService>(currentContext, listen: false);
+    } catch (e) {
+      developer.log("MainAppScaffold: Could not get UserProfileService: $e", name: "MainAppScaffold");
+      return;
+    }
 
     if (mounted && !_hasCheckedUpdate) {
       developer.log("MainAppScaffold: Performing initial update check.", name: "MainAppScaffold");
       if (!mounted) return;
-      await UpdateChecker.checkForUpdate(currentContext);
+      
+      // Use timeout for update check to prevent hanging
+      try {
+        await UpdateChecker.checkForUpdate(currentContext).timeout(
+          const Duration(seconds: 5),
+        );
+      } catch (e) {
+        developer.log("MainAppScaffold: Update check timed out or failed: $e", name: "MainAppScaffold");
+      }
+      
       if(mounted) setState(() => _hasCheckedUpdate = true);
     }
     
     // Fetch the user's profile if it's not already loaded
+    // The UserProfileService now uses OfflineFirstDataLoader internally, so this won't hang
     if (!mounted) return;
     if (_currentUser != null && userProfileService.currentUserProfile?.uid != _currentUser!.uid && !userProfileService.isLoadingProfile) {
         developer.log("MainAppScaffold: Initial profile fetch triggered because current user profile doesn't match auth user or is null.", name: "MainAppScaffold");
@@ -131,6 +168,9 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
         children: [
           // Offline banner will only show when app is offline
           const OfflineBanner(),
+          
+          // Sync status widget will show when syncing or after sync completion
+          const SyncStatusWidget(showOnlyWhenSyncing: false),
           
           // Main content area
           Expanded(

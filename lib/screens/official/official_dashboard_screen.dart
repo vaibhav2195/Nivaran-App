@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/user_profile_service.dart';
 import '../../utils/update_checker.dart';
+import '../../utils/offline_first_data_loader.dart';
 import '../../models/issue_model.dart';
 import '../../models/category_model.dart';
 import '../../services/auth_service.dart';
@@ -15,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'official_statistics_screen.dart';
 import '../../widgets/comments_dialog.dart';
 import '../notifications/notifications_screen.dart';
+import '../../widgets/offline_banner.dart';
 
 class OfficialDashboardScreen extends StatefulWidget {
   const OfficialDashboardScreen({super.key});
@@ -24,7 +26,7 @@ class OfficialDashboardScreen extends StatefulWidget {
 }
 
 class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with WidgetsBindingObserver {
-  Stream<QuerySnapshot>? _departmentIssuesStream;
+  Stream<List<Issue>>? _departmentIssuesStream;
   String? _departmentName = "Loading...";
   String? _username = "Official";
   int _selectedIndex = 0;
@@ -120,16 +122,21 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
 
     if (officialUid != null && officialUid.isNotEmpty) {
       _notificationSubscription?.cancel();
-      _notificationSubscription = FirebaseFirestore.instance
-          .collection('notifications')
-          .where('userId', isEqualTo: officialUid)
-          .where('isRead', isEqualTo: false)
-          .limit(1)
-          .snapshots()
-          .listen((snapshot) {
+      
+      // Use timeout for notification stream as well
+      _notificationSubscription = OfflineFirstDataLoader.createTimeoutStream<bool>(
+        streamBuilder: () => FirebaseFirestore.instance
+            .collection('notifications')
+            .where('userId', isEqualTo: officialUid)
+            .where('isRead', isEqualTo: false)
+            .limit(1)
+            .snapshots()
+            .map((snapshot) => snapshot.docs.isNotEmpty),
+        fallbackValue: false,
+      ).listen((hasUnread) {
         if (mounted) {
           setState(() {
-            _hasUnreadNotifications = snapshot.docs.isNotEmpty;
+            _hasUnreadNotifications = hasUnread;
           });
         }
       }, onError: (error) {
@@ -189,11 +196,29 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         if(mounted){
           if (_departmentIssuesStream == null || officialDepartment != _departmentName || currentUsername != _username) {
             setState(() {
-              _departmentIssuesStream = query.snapshots();
+              // Use OfflineFirstDataLoader to create timeout-wrapped stream
+              _departmentIssuesStream = OfflineFirstDataLoader.createTimeoutStream<List<Issue>>(
+                streamBuilder: () => query.snapshots().map((snapshot) {
+                  return snapshot.docs.map((doc) {
+                    final issueData = doc.data() as Map<String, dynamic>;
+                    return Issue.fromFirestore(issueData, doc.id);
+                  }).toList();
+                }),
+                fallbackValue: <Issue>[],
+              );
             });
           } else { // If filters or sort changed, also update the stream
              setState(() {
-              _departmentIssuesStream = query.snapshots();
+              // Use OfflineFirstDataLoader to create timeout-wrapped stream
+              _departmentIssuesStream = OfflineFirstDataLoader.createTimeoutStream<List<Issue>>(
+                streamBuilder: () => query.snapshots().map((snapshot) {
+                  return snapshot.docs.map((doc) {
+                    final issueData = doc.data() as Map<String, dynamic>;
+                    return Issue.fromFirestore(issueData, doc.id);
+                  }).toList();
+                }),
+                fallbackValue: <Issue>[],
+              );
             });
           }
         }
@@ -205,7 +230,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
            setState(() {
              _departmentName = "Not Assigned";
              _username = currentUsername ?? "Official";
-             _departmentIssuesStream = FirebaseFirestore.instance.collection('issues').where('assignedDepartment', isEqualTo: 'non_existent_value_to_get_empty_stream').snapshots();
+             _departmentIssuesStream = Stream.value(<Issue>[]);
            });
          }
       }
@@ -215,7 +240,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
        if(mounted) {
          setState(() {
            _departmentName = "Access Denied";
-           _departmentIssuesStream = FirebaseFirestore.instance.collection('issues').where('assignedDepartment', isEqualTo: 'non_existent_value_to_get_empty_stream').snapshots();
+           _departmentIssuesStream = Stream.value(<Issue>[]);
            _hasUnreadNotifications = false;
          });
        }
@@ -509,7 +534,7 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         return Center(child: Text('Initializing issue feed for $_departmentName...', style: const TextStyle(fontSize: 16)));
     }
 
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<List<Issue>>(
       stream: _departmentIssuesStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
@@ -517,23 +542,43 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
         }
         if (snapshot.hasError) {
           developer.log("Error in department issues stream: ${snapshot.error}", name: "OfficialDashboard");
-          return Center(child: Text('Error loading issues: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading issues: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    _setupStream(); // Retry
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
         }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        
+        final issues = snapshot.data ?? <Issue>[];
+        
+        if (issues.isEmpty) {
           return Center(child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(AppLocalizations.of(context)!.noIssuesMatchFilters(_departmentName!), style: TextStyle(fontSize: 16, color: Colors.grey[700]), textAlign: TextAlign.center,),
           ));
         }
 
-        final issuesDocs = snapshot.data!.docs;
         return ListView.builder(
           padding: const EdgeInsets.all(8.0),
-          itemCount: issuesDocs.length,
+          itemCount: issues.length,
           itemBuilder: (context, index) {
-            final issueData = issuesDocs[index].data() as Map<String, dynamic>;
-            final issueId = issuesDocs[index].id;
-            final issue = Issue.fromFirestore(issueData, issueId);
+            final issue = issues[index];
 
             // Initialize expansion state for new issues
             _expandedIssueOriginalText.putIfAbsent(issue.id, () => issue.description.length <= shortDescriptionLengthThreshold);
@@ -767,7 +812,12 @@ class _OfficialDashboardScreenState extends State<OfficialDashboardScreen> with 
           }),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: _buildBody()),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {

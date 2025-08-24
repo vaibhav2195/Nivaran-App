@@ -1,24 +1,109 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 
-class ConnectivityService {
+class ConnectivityService with ChangeNotifier {
+  static ConnectivityService? _instance;
+  static ConnectivityService get instance {
+    _instance ??= ConnectivityService._internal();
+    return _instance!;
+  }
+
   final Connectivity _connectivity = Connectivity();
-  late StreamController<ConnectivityResult> _connectivityController;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  bool _isOnline = true;
+  bool _wasOffline = false;
+  bool _isInitialized = false;
 
-  ConnectivityService() {
-    _connectivityController = StreamController<ConnectivityResult>.broadcast();
-    _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-      _connectivityController.add(result);
-    });
+  bool get isOnline => _isOnline;
+  bool get wasOffline => _wasOffline;
+
+  Stream<ConnectivityResult> get connectivityStream =>
+      _connectivity.onConnectivityChanged;
+
+  ConnectivityService._internal();
+
+  factory ConnectivityService() {
+    return instance;
   }
 
-  Stream<ConnectivityResult> get connectivityStream => _connectivityController.stream;
-
-  Future<ConnectivityResult> checkConnectivity() async {
-    return await _connectivity.checkConnectivity();
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    await _checkInitialConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    _isInitialized = true;
   }
 
+  Future<ConnectivityResult> checkConnectivity() {
+    return _connectivity.checkConnectivity();
+  }
+
+  Future<void> _checkInitialConnectivity() async {
+    try {
+      ConnectivityResult result = await _connectivity.checkConnectivity();
+      _updateConnectionStatus(result);
+    } catch (e) {
+      debugPrint('ConnectivityService: Error checking initial connectivity: $e');
+      // Assume offline if we can't check connectivity
+      _updateConnectionStatus(ConnectivityResult.none);
+    }
+  }
+
+  void _updateConnectionStatus(ConnectivityResult result) {
+    bool newStatus = result != ConnectivityResult.none;
+    
+    debugPrint('ConnectivityService: Connection status changed - Result: $result, Online: $newStatus');
+    
+    if (newStatus != _isOnline) {
+      if (!newStatus) {
+        markOfflineTransition();
+      } else {
+        markOnlineTransition();
+      }
+      _isOnline = newStatus;
+      notifyListeners();
+    }
+  }
+
+  /// Called when transitioning from online to offline
+  void markOfflineTransition() {
+    _wasOffline = true;
+    debugPrint('ConnectivityService: Transitioned to offline mode');
+  }
+
+  /// Called when transitioning from offline to online
+  void markOnlineTransition() {
+    if (_wasOffline) {
+      debugPrint('ConnectivityService: Transitioned back online after being offline');
+      // Trigger sync when coming back online
+      _triggerAutoSync();
+    }
+    _wasOffline = false;
+  }
+
+  /// Callback for auto-sync when connectivity is restored
+  void Function()? _onConnectivityRestored;
+
+  /// Set callback for auto-sync when connectivity is restored
+  void setAutoSyncCallback(void Function() callback) {
+    _onConnectivityRestored = callback;
+  }
+
+  /// Trigger auto-sync when connectivity is restored
+  void _triggerAutoSync() {
+    if (_onConnectivityRestored != null) {
+      debugPrint('ConnectivityService: Triggering auto-sync');
+      _onConnectivityRestored!();
+    }
+  }
+
+  @override
   void dispose() {
-    _connectivityController.close();
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = null;
+    _isInitialized = false;
+    super.dispose();
   }
 }

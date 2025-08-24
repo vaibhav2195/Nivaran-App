@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // For token type
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_user_model.dart';
+import '../utils/offline_first_data_loader.dart';
 import 'dart:developer' as developer;
 
 class UserProfileService with ChangeNotifier {
@@ -63,31 +65,18 @@ class UserProfileService with ChangeNotifier {
     }
 
     try {
-      IdTokenResult tokenResult = await authUser.getIdTokenResult(true);
-      Map<String, dynamic>? claims = tokenResult.claims;
-
-      DocumentSnapshot<Map<String, dynamic>> userDoc =
-          await _firestore.collection("users").doc(authUser.uid).get();
-
-      if (userDoc.exists) {
-        _currentUserProfile = AppUser.fromFirestore(userDoc, authUser, claims);
+      // Use OfflineFirstDataLoader to prevent Firebase hangs
+      _currentUserProfile = await OfflineFirstDataLoader.loadUserProfileWithFallback(authUser);
+      
+      if (_currentUserProfile != null) {
+        // Persist the user's UID locally to indicate a cached profile
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_user_uid', authUser.uid);
         developer.log(
             "UserProfileService: Profile loaded for ${authUser.uid}. Role: ${_currentUserProfile?.role}, Dept: ${_currentUserProfile?.department}",
             name: "UserProfileService");
       } else {
-        developer.log("UserProfileService: No Firestore document for user ${authUser.uid}. Creating basic profile.", name: "UserProfileService");
-        _currentUserProfile = AppUser(
-            uid: authUser.uid,
-            email: authUser.email ?? '',
-            username: claims?['name'] as String? ?? authUser.displayName?.split(' ').first ?? authUser.email?.split('@').first ?? 'User',
-            fullName: claims?['name'] as String? ?? authUser.displayName ?? authUser.email?.split('@').first,
-            role: claims?['role'] as String? ?? 'user',
-            department: claims?['department'] as String?,
-            profilePhotoUrl: authUser.photoURL,
-            createdAt: Timestamp.now(),
-            );
-        // Save this basic profile if it doesn't exist
-        await _firestore.collection("users").doc(authUser.uid).set(_currentUserProfile!.toMap(), SetOptions(merge: true));
+        developer.log("UserProfileService: Failed to load profile for ${authUser.uid}", name: "UserProfileService");
       }
     } catch (e, s) {
       developer.log("UserProfileService: Error fetching user profile for ${authUser.uid}: $e", name: "UserProfileService", error:e, stackTrace:s);
@@ -129,9 +118,9 @@ class UserProfileService with ChangeNotifier {
     developer.log("UserProfileService: Profile cleared.", name: "UserProfileService");
   }
   Future<bool> hasCachedUserProfile() async {
-    // This is a simplified check. In a real app, you might check Isar for a cached user.
-    // For now, we'll assume if _currentUserProfile is not null, it's "cached".
-    // A more robust solution would involve checking a local database like Isar.
-    return _currentUserProfile != null;
+    final prefs = await SharedPreferences.getInstance();
+    final cachedUid = prefs.getString('cached_user_uid');
+    developer.log("Checking for cached user profile. Found UID: $cachedUid", name: "UserProfileService");
+    return cachedUid != null && cachedUid.isNotEmpty;
   }
 }

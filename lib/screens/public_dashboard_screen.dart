@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/issue_model.dart'; // Add this import for Issue model
 import 'dart:developer' as developer; // For logging
 import '../services/predictive_maintenance_service.dart';
+import '../widgets/offline_banner.dart';
 // Removed: import 'dart:math' show sqrt;
 class PublicDashboardScreen extends StatelessWidget {
   const PublicDashboardScreen({super.key});
@@ -27,24 +28,28 @@ class PublicDashboardScreen extends StatelessWidget {
               )
             : null,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status Cards Row
-            _buildStatusCardsRow(context, textTheme),
-            const SizedBox(height: 32),
-            // Issue Status Distribution Section
-            _buildIssueStatusDistribution(context, textTheme),
-            const SizedBox(height: 32),
-            // Add the Predictive Maintenance Section
-            _buildPredictiveMaintenance(context, textTheme),
-            const SizedBox(height: 32),
-            Text(
-              AppLocalizations.of(context)!.resolutionTimesSatisfactionRates,
-              style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status Cards Row
+                  _buildStatusCardsRow(context, textTheme),
+                  const SizedBox(height: 32),
+                  // Issue Status Distribution Section
+                  _buildIssueStatusDistribution(context, textTheme),
+                  const SizedBox(height: 32),
+                  // Add the Predictive Maintenance Section
+                  _buildPredictiveMaintenance(context, textTheme),
+                  const SizedBox(height: 32),
+                  Text(
+                    AppLocalizations.of(context)!.resolutionTimesSatisfactionRates,
+                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
             const SizedBox(height: 4),
             Text(
               AppLocalizations.of(context)!.dataByEmployeeDepartment,
@@ -63,8 +68,11 @@ class PublicDashboardScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-          ],
-        ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

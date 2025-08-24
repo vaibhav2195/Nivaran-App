@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/notification_model.dart';
 import '../../services/user_profile_service.dart';
+import '../../utils/offline_first_data_loader.dart';
 import 'dart:developer' as developer;
 import 'package:intl/intl.dart';
 
@@ -88,16 +89,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     developer.log("NotificationsScreen: Setting up stream for user $userId", name: "NotificationsScreen");
     if (mounted) { // Redundant check, but safe
       setState(() {
-        _notificationsStream = FirebaseFirestore.instance
-            .collection('notifications')
-            .where('userId', isEqualTo: userId)
-            .orderBy('createdAt', descending: true)
-            .limit(50)
-            .snapshots()
-            .map((snapshot) => snapshot.docs
-                .map((doc) => NotificationModel.fromFirestore(doc))
-                .toList())
-            .handleError((error) {
+        // Use OfflineFirstDataLoader to create timeout-wrapped stream
+        _notificationsStream = OfflineFirstDataLoader.createTimeoutStream<List<NotificationModel>>(
+          streamBuilder: () => FirebaseFirestore.instance
+              .collection('notifications')
+              .where('userId', isEqualTo: userId)
+              .orderBy('createdAt', descending: true)
+              .limit(50)
+              .snapshots()
+              .map((snapshot) => snapshot.docs
+                  .map((doc) => NotificationModel.fromFirestore(doc))
+                  .toList()),
+          fallbackValue: <NotificationModel>[],
+        ).handleError((error) {
           developer.log("Error in notifications stream: $error", name: "NotificationsScreen");
           if(mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

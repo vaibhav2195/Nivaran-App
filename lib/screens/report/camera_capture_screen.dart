@@ -456,12 +456,19 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> with WidgetsB
 
   // Modify your dispose method to ensure proper cleanup
   @override
-  Future<void> dispose() async {
+  void dispose() {
     developer.log('CameraCaptureScreen: dispose() called.', name: 'CameraCaptureScreen');
     _isDisposing = true;
     WidgetsBinding.instance.removeObserver(this);
-    await _disposeController(); // Use the centralized async dispose method
+    
+    // Call super.dispose() first, then clean up async resources
     super.dispose();
+    
+    // Clean up camera controller asynchronously without awaiting
+    _disposeController().catchError((error) {
+      developer.log('Error disposing camera controller: $error', name: 'CameraCaptureScreen');
+    });
+    
     developer.log('CameraCaptureScreen: dispose() finished.', name: 'CameraCaptureScreen');
   }
   

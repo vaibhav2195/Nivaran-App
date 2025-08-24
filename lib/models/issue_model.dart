@@ -1,6 +1,5 @@
 // lib/models/issue_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'local_issue_model.dart';
 
 enum VoteType { upvote, downvote }
 
@@ -180,24 +179,5 @@ class Issue {
       if (lastCollaborationAt != null) 'lastCollaborationAt': lastCollaborationAt,
       'statusUpdates': statusUpdates,
     };
-  }
-  factory Issue.fromLocalIssue(LocalIssue localIssue) {
-    return Issue(
-      id: localIssue.issueId ?? localIssue.id.toString(),
-      description: localIssue.description,
-      category: localIssue.category,
-      urgency: localIssue.urgency,
-      tags: localIssue.tags,
-      imageUrl: localIssue.localImagePath ?? localIssue.imageUrl ?? '',
-      timestamp: Timestamp.fromDate(localIssue.timestamp),
-      location: LocationModel(latitude: 0.0, longitude: 0.0, address: 'Saved offline'),
-      userId: '', // Not available in local issue
-      username: 'You', // Placeholder
-      status: 'Pending Sync',
-      upvotes: 0,
-      downvotes: 0,
-      voters: {},
-      commentsCount: 0,
-    );
   }
 }

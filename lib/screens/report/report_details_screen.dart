@@ -13,11 +13,11 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; // Import for ConnectivityResult
 
 import '../../services/image_upload_service.dart';
-import '../../services/offline_sync_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/location_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/user_profile_service.dart';
+import '../../services/offline_sync_service.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/auth_button.dart';
 import '../../models/app_user_model.dart';
@@ -54,8 +54,8 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   List<CategoryModel> _fetchedCategories = [];
   CategoryModel? _selectedCategoryModel;
 
-  late final OfflineSyncService _offlineSyncService;
-  late final ConnectivityService _connectivityService;
+  ConnectivityService? _connectivityService;
+  OfflineSyncService? _offlineSyncService;
   final LocationService _locationService = LocationService();
   final ImageUploadService _imageUploadService = ImageUploadService();
   final FirestoreService _firestoreService = FirestoreService();
@@ -65,9 +65,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
-    _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
-    _fetchInitialData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+        _offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+        _fetchInitialData();
+      }
+    });
   }
 
   @override
@@ -78,7 +82,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   }
 
   Future<void> _fetchInitialData() async {
-    if (!mounted) return;
+    if (!mounted || _connectivityService == null) return;
     setState(() {
       _isLoadingInitialData = true;
       _analysisStatus = AppLocalizations.of(context)!.fetchingLocationAndCategories;
@@ -114,7 +118,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       }
 
       // Step 3: Perform AI analysis
-      final connectivityResult = await _connectivityService.checkConnectivity();
+      final connectivityResult = await _connectivityService?.checkConnectivity() ?? ConnectivityResult.none;
       if (connectivityResult != ConnectivityResult.none) {
         if (widget.imagePath.isNotEmpty && _currentPosition != null) {
           if (mounted) {
@@ -497,6 +501,13 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
   }
 
   Future<void> _submitReport() async {
+    if (_connectivityService == null || _offlineSyncService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Services not initialized. Please try again.')),
+      );
+      return;
+    }
+
     final userProfileService = Provider.of<UserProfileService>(context, listen: false);
     final AppUser? appUser = userProfileService.currentUserProfile;
 
@@ -517,95 +528,132 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
     setState(() => _isSubmitting = true);
 
     try {
-      final connectivityResult = await _connectivityService.checkConnectivity();
+      final connectivityResult = await _connectivityService?.checkConnectivity() ?? ConnectivityResult.none;
 
       if (connectivityResult == ConnectivityResult.none) {
-        // Offline: Save locally
-        await _saveIssueLocally(appUser);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.issueSavedOffline)),
-          );
-          String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
-          Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
-        }
-      } else {
-        // Online: Proceed with existing upload logic
-        // Get the image data as a Base64 string
-        final imageBytes = await File(widget.imagePath).readAsBytes();
-        final base64Image = base64Encode(imageBytes);
+        // OFFLINE MODE: Save issue locally
+        developer.log('Submitting issue offline', name: 'ReportDetailsScreen');
+        
+        final locationModel = LocationModel(
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          address: _currentAddress ?? 'Address not available',
+        );
 
-        // Use Gemini API directly for duplicate detection instead of Cloud Function
-        final isDuplicate = await _checkForDuplicatesWithGemini(
-          base64Image,
-          _descriptionController.text.trim()
+        final tagsList = _tagsController.text
+            .split(',')
+            .map((tag) => tag.trim())
+            .where((tag) => tag.isNotEmpty)
+            .toList();
+
+        // Save issue offline using OfflineSyncService
+        final localId = await _offlineSyncService!.saveIssueOffline(
+          description: _descriptionController.text.trim(),
+          category: _selectedCategoryModel!.name,
+          urgency: _detectedUrgency, // Will be "Medium" for offline issues
+          tags: tagsList,
+          imagePath: widget.imagePath,
+          location: locationModel,
+          user: appUser,
         );
         
-        // If it's a duplicate, find the most similar issue
-        String? existingIssueId;
-        String? existingIssueTitle;
-        
-        if (isDuplicate) {
-          // Query recent issues to find the most similar one
-          final recentIssues = await FirebaseFirestore.instance
-              .collection('issues')
-              .orderBy('timestamp', descending: true)
-              .limit(10)
-              .get();
-              
-          if (recentIssues.docs.isNotEmpty) {
-            // For simplicity, we'll just use the most recent issue
-            // In a production app, you might want to implement more sophisticated matching
-            final mostRecentIssue = recentIssues.docs.first;
-            existingIssueId = mostRecentIssue.id;
-            existingIssueTitle = mostRecentIssue.data()['title'] as String? ?? 'Untitled Issue';
-          }
-        }
+        developer.log('Issue saved offline with local ID: $localId', name: 'ReportDetailsScreen');
 
-        // Handle the response
-        if (isDuplicate && existingIssueId != null) {
-          if (!mounted) return;
-          
-          // Show dialog for duplicate found
-          final result = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text("Similar Issue Found"),
-              content: Text(
-                "This seems related to an existing report:\n\n'${existingIssueTitle ?? 'Untitled Issue'}'\n\nWould you like to add your photo and info as evidence to it?"
-              ),
-              actions: [
-                TextButton(
-                  child: const Text("Create New Anyway"),
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                ),
-                ElevatedButton(
-                  child: const Text("Yes, Add to Existing"),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                ),
-              ],
+        if (mounted) {
+          // Show "Issue saved locally" confirmation message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Issue saved locally. It will sync when you\'re back online.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
             ),
           );
 
-          if (result == true) {
-            // User chose to collaborate
+          // Navigate back to main screen
+          String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
+          Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
+        }
+        
+        return;
+      }
+
+      // ONLINE MODE: Proceed with existing upload logic
+      developer.log('Submitting issue online', name: 'ReportDetailsScreen');
+      
+      // Get the image data as a Base64 string
+      final imageBytes = await File(widget.imagePath).readAsBytes();
+      final base64Image = base64Encode(imageBytes);
+
+      // Use Gemini API directly for duplicate detection instead of Cloud Function
+      final isDuplicate = await _checkForDuplicatesWithGemini(
+          base64Image,
+          _descriptionController.text.trim()
+      );
+
+      // If it's a duplicate, find the most similar issue
+      String? existingIssueId;
+      String? existingIssueTitle;
+
+      if (isDuplicate) {
+        // Query recent issues to find the most similar one
+        final recentIssues = await FirebaseFirestore.instance
+            .collection('issues')
+            .orderBy('timestamp', descending: true)
+            .limit(10)
+            .get();
+
+        if (recentIssues.docs.isNotEmpty) {
+          // For simplicity, we'll just use the most recent issue
+          // In a production app, you might want to implement more sophisticated matching
+          final mostRecentIssue = recentIssues.docs.first;
+          existingIssueId = mostRecentIssue.id;
+          existingIssueTitle = mostRecentIssue.data()['title'] as String? ?? 'Untitled Issue';
+        }
+      }
+
+      // Handle the response
+      if (isDuplicate && existingIssueId != null) {
+        if (!mounted) return;
+
+        // Show dialog for duplicate found
+        final result = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Similar Issue Found"),
+            content: Text(
+                "This seems related to an existing report:\n\n'${existingIssueTitle ?? 'Untitled Issue'}'\n\nWould you like to add your photo and info as evidence to it?"
+            ),
+            actions: [
+              TextButton(
+                child: const Text("Create New Anyway"),
+                onPressed: () => Navigator.of(ctx).pop(false),
+              ),
+              ElevatedButton(
+                child: const Text("Yes, Add to Existing"),
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+            ],
+          ),
+        );
+
+        if (result == true) {
+          // User chose to collaborate
+          if (!mounted) return;
+          final issueDoc = await FirebaseFirestore.instance.collection('issues').doc(existingIssueId).get();
+          if (issueDoc.exists) {
             if (!mounted) return;
-            final issueDoc = await FirebaseFirestore.instance.collection('issues').doc(existingIssueId).get();
-            if (issueDoc.exists) {
-              if (!mounted) return;
-              final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
-              Navigator.push(context, MaterialPageRoute(builder: (context) =>
+            final existingIssue = Issue.fromFirestore(issueDoc.data()!, issueDoc.id);
+            Navigator.push(context, MaterialPageRoute(builder: (context) =>
                 IssueCollaborationScreen(issueId: existingIssueId!, issue: existingIssue)
-              ));
-            }
-          } else {
-            // User chose to create new anyway
-            await _createNewIssue(appUser, isDuplicateOf: existingIssueId);
+            ));
           }
         } else {
-          // No duplicate found
-          await _createNewIssue(appUser);
+          // User chose to create new anyway
+          await _createNewIssue(appUser, isDuplicateOf: existingIssueId);
         }
+      } else {
+        // No duplicate found
+        await _createNewIssue(appUser);
       }
     } on FirebaseFunctionsException catch (e) {
       developer.log("Cloud function error: ${e.message}", name: "ReportDetailsScreen", error: e);
@@ -630,42 +678,12 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
     }
   }
 
-  Future<void> _saveIssueLocally(AppUser appUser) async {
-    if (_currentPosition == null || _selectedCategoryModel == null) return;
-
-    final List<String> tagsList = _tagsController.text.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
-
-    final issueToSave = Issue(
-      id: '', // ID will be generated by Isar
-      description: _descriptionController.text.trim(),
-      category: _selectedCategoryModel!.name,
-      urgency: _detectedUrgency,
-      tags: tagsList.isNotEmpty ? tagsList : null,
-      imageUrl: '', // No remote URL when offline
-      timestamp: Timestamp.now(),
-      location: LocationModel(
-        latitude: _currentPosition!.latitude,
-        longitude: _currentPosition!.longitude,
-        address: _currentAddress ?? 'Address not available',
-      ),
-      userId: appUser.uid,
-      username: appUser.username!,
-      status: 'Pending Sync',
-      isUnresolved: true,
-      assignedDepartment: _selectedCategoryModel!.defaultDepartment,
-      upvotes: 0,
-      downvotes: 0,
-      voters: {},
-      commentsCount: 0,
-      affectedUsersCount: 1,
-      affectedUserIds: [appUser.uid],
-    );
-
-    await _offlineSyncService.saveIssueLocally(issueToSave, widget.imagePath);
-  }
 
   Future<void> _createNewIssue(AppUser appUser, {String? isDuplicateOf}) async {
     if (_currentPosition == null || _selectedCategoryModel == null) return;
+
+    // Save the issue locally before attempting to upload to Firebase.
+    // This ensures that even if the online submission fails, a record is kept locally.
 
     try {
       final String? imageUrl = await _imageUploadService.uploadImage(File(widget.imagePath));
@@ -877,7 +895,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
                     Text(AppLocalizations.of(context)!.urgency, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     SizedBox(height: screenHeight * 0.008),
                     StreamBuilder<ConnectivityResult>(
-                      stream: Provider.of<ConnectivityService>(context).connectivityStream,
+                      stream: Provider.of<ConnectivityService>(context, listen: false).connectivityStream,
                       builder: (context, snapshot) {
                         final isOffline = snapshot.data == ConnectivityResult.none;
                         return Container(

@@ -1,4 +1,5 @@
 // lib/screens/feed/issues_list_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,11 +12,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../widgets/issue_card.dart'; // Uses IssueCard
 import '../../models/issue_model.dart';
-import '../../models/local_issue_model.dart'; // Import LocalIssue
 import '../../services/location_service.dart';
-import '../../services/offline_sync_service.dart'; // Import OfflineSyncService
 import '../../services/connectivity_service.dart'; // Import ConnectivityService
 import '../../utils/location_utils.dart';
+import '../../utils/offline_first_data_loader.dart';
 
 class IssuesListScreen extends StatefulWidget {
   const IssuesListScreen({super.key});
@@ -32,46 +32,62 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
   Position? _currentPosition; // Store current position for filtering
   static const double _proximityRadiusKm = 10.0; // 10km radius for proximity filtering
 
-  late OfflineSyncService _offlineSyncService;
-  late ConnectivityService _connectivityService;
   bool _isOffline = false;
-  List<LocalIssue> _localIssues = [];
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
-    _offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
-    _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
-    _checkConnectivityAndLoadIssues();
-    _connectivityService.connectivityStream.listen((result) {
-      final isOffline = result == ConnectivityResult.none;
-      if (_isOffline != isOffline) {
-        setState(() {
-          _isOffline = isOffline;
-        });
-        _checkConnectivityAndLoadIssues(); // Re-check and load when connectivity changes
+    // Use WidgetsBinding to safely access context after initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeConnectivity();
+        _fetchCurrentLocationAndUpdateDisplay();
       }
     });
-    _fetchCurrentLocationAndUpdateDisplay();
+  }
+
+  Future<void> _initializeConnectivity() async {
+    try {
+      final connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+      
+      _checkConnectivityAndLoadIssues();
+      _connectivitySubscription = connectivityService.connectivityStream.listen((result) {
+        final isOffline = result == ConnectivityResult.none;
+        if (_isOffline != isOffline) {
+          setState(() {
+            _isOffline = isOffline;
+          });
+          _checkConnectivityAndLoadIssues(); // Re-check and load when connectivity changes
+        }
+      });
+    } catch (e) {
+      developer.log('Error initializing connectivity: $e', name: 'IssuesListScreen');
+    }
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkConnectivityAndLoadIssues() async {
-    final connectivityResult = await _connectivityService.checkConnectivity();
-    setState(() {
-      _isOffline = connectivityResult == ConnectivityResult.none;
-    });
-
-    if (_isOffline) {
-      final localIssues = await _offlineSyncService.getUnsyncedIssues();
-      setState(() {
-        _localIssues = localIssues;
-      });
-    } else {
-      // When online, the StreamBuilder will handle loading from Firestore.
-      // We might want to clear local issues if they are now synced.
-      setState(() {
-        _localIssues = [];
-      });
+    try {
+      final connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+      final connectivityResult = await connectivityService.checkConnectivity();
+      if (mounted) {
+        setState(() {
+          _isOffline = connectivityResult == ConnectivityResult.none;
+        });
+      }
+    } catch (e) {
+      developer.log('Error checking connectivity: $e', name: 'IssuesListScreen');
+      if (mounted) {
+        setState(() {
+          _isOffline = true; // Assume offline if we can't check
+        });
+      }
     }
   }
 
@@ -95,7 +111,10 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
 
   Future<void> _fetchCurrentLocationAndUpdateDisplay() async {
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
+    
+    // Store ScaffoldMessenger reference early to avoid widget lifecycle issues
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     setState(() {
       _isFetchingLocation = true;
       _currentLocationDisplay = "Fetching location...";
@@ -106,7 +125,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
     var status = await Permission.locationWhenInUse.status;
     if (!status.isGranted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Location permission denied. Showing general feed.')),
         );
         setState(() {
@@ -149,7 +168,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           }
 
           if (displayAddress.isEmpty) {
-            displayAddress = place.locality ?? place.administrativeArea ?? l10n!.location;
+            displayAddress = place.locality ?? place.administrativeArea ?? "Location";
           }
 
           if (displayAddress.length > 30) {
@@ -167,11 +186,11 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
           setState(() {
             _currentLocationDisplay = _isProximityFilterEnabled
                 ? "Current Location (10km radius)"
-                : l10n!.location;
+                : "Location";
           });
         }
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Could not fetch location data.')),
         );
         setState(() {
@@ -182,7 +201,7 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
     } catch (e) {
       developer.log('Error fetching location in IssuesListScreen: ${e.toString()}', name: 'IssuesListScreen');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Error determining location: Check permissions and services.')),
         );
         setState(() {
@@ -241,43 +260,74 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
   }
 
   Widget _buildOfflineBody(AppLocalizations? l10n) {
-    if (_localIssues.isEmpty) {
-      return const Center(child: Text("No locally saved issues."));
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: _localIssues.length,
-      itemBuilder: (context, index) {
-        final localIssue = _localIssues[index];
-        final issue = Issue.fromLocalIssue(localIssue);
-        return IssueCard(issue: issue);
-      },
-    );
+    return const Center(child: Text("You are offline. Please check your connection."));
   }
 
   Widget _buildOnlineBody(AppLocalizations? l10n) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('issues')
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
+    // Use OfflineFirstDataLoader to create a timeout-wrapped stream
+    return StreamBuilder<List<Issue>>(
+      stream: OfflineFirstDataLoader.createTimeoutStream<List<Issue>>(
+        streamBuilder: () => FirebaseFirestore.instance
+            .collection('issues')
+            .orderBy('timestamp', descending: true)
+            .snapshots()
+            .map((snapshot) {
+              return snapshot.docs.map((doc) {
+                final issueData = doc.data() as Map<String, dynamic>;
+                return Issue.fromFirestore(issueData, doc.id);
+              }).toList();
+            }),
+        fallbackValue: <Issue>[],
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && !_isFetchingLocation) {
           return const Center(child: CircularProgressIndicator());
         }
+        
         if (snapshot.hasError) {
           developer.log('Firestore Error: ${snapshot.error}', name: 'IssuesListScreen');
-          return Center(child: Text(l10n!.issueDetails));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  'Unable to load issues. Please check your connection.',
+                  style: TextStyle(color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      // Trigger rebuild to retry
+                    });
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
         }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('No issues reported yet. Be the first!'));
+        
+        final allIssues = snapshot.data ?? [];
+        
+        if (allIssues.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'No issues reported yet. Be the first!',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          );
         }
-
-        final issuesDocs = snapshot.data!.docs;
-        final List<Issue> allIssues = issuesDocs.map((doc) {
-          final issueData = doc.data() as Map<String, dynamic>;
-          return Issue.fromFirestore(issueData, doc.id);
-        }).toList();
 
         // Apply proximity filter if enabled and location is available
         List<Issue> displayedIssues = allIssues;
@@ -298,16 +348,23 @@ class _IssuesListScreenState extends State<IssuesListScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('No issues found in your area.'),
-                if (_isProximityFilterEnabled)
+                const Icon(Icons.location_off_outlined, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text(
+                  'No issues found in your area.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                if (_isProximityFilterEnabled) ...[
+                  const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
                       setState(() {
                         _isProximityFilterEnabled = false;
                       });
                     },
-                    child: Text(l10n!.issuesFeed),
+                    child: Text(l10n?.issuesFeed ?? 'Show All Issues'),
                   ),
+                ],
               ],
             ),
           );

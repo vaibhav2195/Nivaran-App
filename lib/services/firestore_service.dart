@@ -19,6 +19,15 @@ class FirestoreService {
     await _db.collection('issues').add(issueData);
   }
 
+  // Add issue and return the document ID (for offline sync)
+  Future<String> addIssueWithId(Map<String, dynamic> issueData) async {
+    if (_currentUser == null) {
+      throw Exception("User not logged in.");
+    }
+    final docRef = await _db.collection('issues').add(issueData);
+    return docRef.id;
+  }
+
   Stream<List<Issue>> getIssuesStream() {
      return _db
         .collection('issues')
