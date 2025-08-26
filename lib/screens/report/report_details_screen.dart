@@ -570,8 +570,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
           );
 
           // Navigate back to main screen
-          String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
-          Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
         }
         
         return;
@@ -722,8 +721,7 @@ If you're uncertain, err on the side of marking it as not a duplicate (false).
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.description)));
-        String targetRoute = appUser.isOfficial ? '/official_dashboard' : '/app';
-        Navigator.of(context).pushNamedAndRemoveUntil(targetRoute, (Route<dynamic> route) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
       }
     } catch (e) {
       developer.log('Failed to create new issue: ${e.toString()}', name: 'ReportDetailsScreen', error: e);

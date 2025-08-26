@@ -148,7 +148,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (navigateTo == '/issue_details' && issueId != null && issueId.isNotEmpty) {
             developer.log("Navigating to issue details: $issueId", name: "NotificationsScreen");
             Navigator.pushNamed(currentContext, '/issue_details', arguments: issueId);
-        } else if (navigateTo == '/official_dashboard' || navigateTo == '/app') {
+        } else if (navigateTo == '/app') {
              developer.log("Navigating to main dashboard: $navigateTo", name: "NotificationsScreen");
              Navigator.pushNamedAndRemoveUntil(currentContext, navigateTo, (route) => false);
         }
@@ -278,8 +278,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.chat_bubble_outline_rounded;
       case 'issue_resolved':
         return Icons.check_circle_outline_rounded;
-      case 'new_issue_for_official':
-        return Icons.assignment_late_outlined;
       case 'admin_message':
         return Icons.admin_panel_settings_outlined;
       default:

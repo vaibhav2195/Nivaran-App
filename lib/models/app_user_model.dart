@@ -88,7 +88,5 @@ class AppUser {
     };
   }
 
-  bool get isOfficial => role == 'official';
   bool get isAdmin => role == 'admin';
-  bool get isPendingOfficial => role == 'official';
 }

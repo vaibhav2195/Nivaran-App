@@ -49,7 +49,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     final authService = Provider.of<AuthService>(context, listen: false);
-    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
 
     try {
       await authService.signInWithEmail( // AuthService handles actual sign-in and profile fetching
@@ -58,21 +57,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
       
-      if (mounted && userProfileService.currentUserProfile != null) {
-         // Check if this user is an official and redirect accordingly if needed
-         // For citizen login, we go to /app. Official login screen handles /official_dashboard
-         if (userProfileService.currentUserProfile!.isOfficial) {
-            developer.log("LoginScreen: Official user detected logging into citizen portal. Redirecting to official dashboard.", name:"LoginScreen");
-            // This scenario should ideally be handled by distinct login pages or role check *before* navigation.
-            // For now, if an official accidentally uses citizen login and succeeds, send to their dash.
-            Navigator.of(context).pushNamedAndRemoveUntil('/official_dashboard', (Route<dynamic> route) => false);
-         } else {
-            Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
-         }
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful but failed to retrieve user profile. Please try again.")),
-        );
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
@@ -155,17 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Crucial: Ensure profile with claims is loaded
         await userProfileService.fetchAndSetCurrentUserProfile();
 
-        if (mounted && userProfileService.currentUserProfile != null) {
-            if (userProfileService.currentUserProfile!.isOfficial) {
-                 developer.log("LoginScreen: Official user detected logging in via Google to citizen portal. Redirecting.", name:"LoginScreen");
-                Navigator.of(context).pushNamedAndRemoveUntil('/official_dashboard', (Route<dynamic> route) => false);
-            } else {
-                Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
-            }
-        } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text("Google Sign-In successful but failed to finalize profile.")),
-           );
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/app', (Route<dynamic> route) => false);
         }
 
       } else if (mounted) {

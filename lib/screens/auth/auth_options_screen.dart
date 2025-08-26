@@ -14,7 +14,6 @@ class AuthOptionsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final bool isOfficial = userType == 'official';
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -45,11 +44,7 @@ class AuthOptionsScreen extends StatelessWidget {
                 AuthButton(
                   text: AppLocalizations.of(context)!.login,
                   onPressed: () {
-                    if (isOfficial) {
-                      Navigator.pushNamed(context, '/official_login');
-                    } else {
-                      Navigator.pushNamed(context, '/login');
-                    }
+                    Navigator.pushNamed(context, '/login');
                   },
                 ),
                 SizedBox(height: screenHeight * 0.025),
@@ -70,11 +65,7 @@ class AuthOptionsScreen extends StatelessWidget {
                 AuthButton(
                   text: AppLocalizations.of(context)!.signUp,
                   onPressed: () {
-                    if (isOfficial) {
-                      Navigator.pushNamed(context, '/official_signup');
-                    } else {
-                      Navigator.pushNamed(context, '/signup');
-                    }
+                    Navigator.pushNamed(context, '/signup');
                   },
                 ),
                 const Spacer(),

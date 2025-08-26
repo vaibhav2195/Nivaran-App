@@ -97,8 +97,6 @@ class AccountScreen extends StatelessWidget {
 
     final String displayName = currentUserProfile.username ?? currentUserProfile.fullName ?? currentUserProfile.email?.split('@')[0] ?? 'User';
     final String? profileImageUrl = currentUserProfile.profilePhotoUrl;
-    final bool isOfficial = currentUserProfile.isOfficial;
-    final String? officialDepartment = currentUserProfile.department;
 
     return Scaffold(
       appBar: AppBar(
@@ -143,19 +141,6 @@ class AccountScreen extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
                           ),
                         ),
-                      if (isOfficial && officialDepartment != null && officialDepartment.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          "Official: $officialDepartment",
-                          style: TextStyle(fontSize: 14, color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.w500),
-                        ),
-                      ] else if (currentUserProfile.isPendingOfficial) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          AppLocalizations.of(context)!.officialAccountPendingVerification,
-                          style: TextStyle(fontSize: 14, color: Colors.orange.shade700, fontStyle: FontStyle.italic),
-                        ),
-                      ]
                     ],
                   ),
                 ),
@@ -164,19 +149,6 @@ class AccountScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          if (isOfficial) ...[
-            _buildSectionTitle(context, AppLocalizations.of(context)!.officialDashboard),
-            _buildListTile(
-              context: context,
-              icon: Icons.dashboard_customize_outlined,
-              title: AppLocalizations.of(context)!.officialDashboard,
-              onTap: () {
-                Navigator.pushNamed(context, '/official_dashboard');
-              }
-            ),
-            const Divider(height:1, indent: 16, endIndent: 16),
-            const SizedBox(height: 10),
-          ],
 
           _buildSectionTitle(context, AppLocalizations.of(context)!.myIssues),
           _buildListTile(

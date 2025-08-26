@@ -27,9 +27,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get citizen => 'नागरिक';
 
   @override
-  String get official => 'अधिकारी';
-
-  @override
   String get letsGetStarted => 'चलिए शुरू करते हैं';
 
   @override
@@ -67,12 +64,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get alreadyHaveAnAccount => 'पहले से ही एक खाता है?';
-
-  @override
-  String get officialLoginTitle => 'अधिकारी लॉगिन';
-
-  @override
-  String get officialSignUpTitle => 'अधिकारी पंजीकरण';
 
   @override
   String get enterYourOfficialDetails => 'अपने आधिकारिक विवरण दर्ज करें';
@@ -125,9 +116,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get publicDashboard => 'सार्वजनिक डैशबोर्ड';
-
-  @override
-  String get officialDashboard => 'अधिकारी डैशबोर्ड';
 
   @override
   String get notifications => 'सूचनाएं';
@@ -339,49 +327,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get mobileNo => 'मोबाइल नंबर';
 
   @override
-  String get officialAccountPendingVerification =>
-      'आपका आधिकारिक खाता व्यवस्थापक सत्यापन के लिए लंबित है।';
-
-  @override
-  String get accessDeniedOfficialOnly =>
-      'पहुंच अस्वीकृत। यह पोर्टल केवल अधिकृत अधिकारियों के लिए है।';
-
-  @override
-  String get loginSucceededFailedToVerify =>
-      'लॉगिन सफल रहा लेकिन आधिकारिक स्थिति सत्यापित करने में विफल रहा। कृपया पुनः प्रयास करें।';
-
-  @override
-  String get officialLoginFailed => 'अधिकारी लॉगिन विफल।';
-
-  @override
-  String get unexpectedErrorOfficialLogin =>
-      'अधिकारी लॉगिन के दौरान एक अप्रत्याशक्षित त्रुटि हुई।';
-
-  @override
-  String get googleSignInSuccessfulPendingVerification =>
-      'Google साइन-इन सफल। आपका आधिकारिक खाता व्यवस्थापक सत्यापन के लिए लंबित है।';
-
-  @override
-  String get googleAccountNotRecognized =>
-      'Google खाता एक अधिकारी के रूप में मान्यता प्राप्त नहीं है। कृपया आधिकारिक क्रेडेंशियल का उपयोग करें या व्यवस्थापक से संपर्क करें।';
-
-  @override
-  String get googleSignInSuccessfulFailedToVerify =>
-      'Google साइन-इन सफल रहा लेकिन आधिकारिक स्थिति सत्यापित करने में विफल रहा।';
-
-  @override
-  String get googleSignInCancelledOrFailed =>
-      'Google साइन-इन रद्द या विफल हो गया।';
-
-  @override
-  String get googleSignInOfficialsFailed =>
-      'अधिकारियों के लिए Google साइन-इन विफल।';
-
-  @override
   String get fullNameIsRequired => 'पूरा नाम आवश्यक है';
-
-  @override
-  String get officialEmailIsRequired => 'आधिकारिक ईमेल आवश्यक है';
 
   @override
   String get mobileNumberIsRequired => 'मोबाइल नंबर आवश्यक है';
@@ -486,4 +432,13 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get deleteIssueConfirmation =>
       'क्या आप वाकई इस समस्या को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।';
+
+  @override
+  String get locationUnavailable => 'स्थान अनुपलब्ध';
+
+  @override
+  String get locationError => 'स्थान त्रुटि';
+
+  @override
+  String get cachedData => 'कैश्ड डेटा';
 }

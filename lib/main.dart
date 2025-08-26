@@ -14,11 +14,6 @@ import 'package:modern_auth_app/screens/initial_route_manager.dart';
 import 'package:modern_auth_app/screens/language_selection_screen.dart';
 import 'package:modern_auth_app/screens/main_app_scaffold.dart';
 import 'package:modern_auth_app/screens/notifications/notifications_screen.dart';
-import 'package:modern_auth_app/screens/official/official_dashboard_screen.dart';
-import 'package:modern_auth_app/screens/official/official_details_entry_screen.dart';
-import 'package:modern_auth_app/screens/official/official_login_screen.dart';
-import 'package:modern_auth_app/screens/official/official_set_password_screen.dart';
-import 'package:modern_auth_app/screens/official/official_signup_screen.dart';
 import 'package:modern_auth_app/screens/public_dashboard_screen.dart';
 import 'package:modern_auth_app/screens/role_selection_screen.dart';
 import 'package:modern_auth_app/screens/profile/unsynced_issues_screen.dart';
@@ -223,11 +218,6 @@ class _MyAppState extends State<MyApp> {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/verify_email_screen': (context) => const VerifyEmailScreen(),
-            '/official_login': (context) => const OfficialLoginScreen(),
-            '/official_signup': (context) => const OfficialSignupScreen(),
-            '/official_details_entry': (context) => const OfficialDetailsEntryScreen(),
-            '/official_set_password': (context) => const OfficialSetPasswordScreen(),
-            '/official_dashboard': (context) => const OfficialDashboardScreen(),
             '/app': (context) => const MainAppScaffold(),
             '/notifications': (context) => const NotificationsScreen(),
             '/issue_details': (context) {
@@ -320,15 +310,7 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
       }
 
       if (profile != null) {
-        if (profile.isOfficial) {
-          if (profile.department == null || profile.department!.isEmpty) {
-            await navigator.pushNamedAndRemoveUntil('/official_details_entry', (route) => false);
-          } else {
-            await navigator.pushNamedAndRemoveUntil('/official_dashboard', (route) => false);
-          }
-        } else {
-          await navigator.pushNamedAndRemoveUntil('/app', (route) => false);
-        }
+        await navigator.pushNamedAndRemoveUntil('/app', (route) => false);
       } else if (isOnline) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not load user profile. Please try again.")));

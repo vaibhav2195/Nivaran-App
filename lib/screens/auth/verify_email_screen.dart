@@ -65,21 +65,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           if (!mounted) return;
 
           if (userProfileService.currentUserProfile != null) {
-            if (userProfileService.currentUserProfile!.isOfficial) {
-              // If official, they might have signed up but not entered details yet.
-              // Check if details like department are present.
-              // This logic might need refinement based on your exact flow for officials.
-              if (userProfileService.currentUserProfile!.department == null || userProfileService.currentUserProfile!.department!.isEmpty) {
-                 developer.log("Official email verified, navigating to details entry.", name: "VerifyEmailScreen");
-                 Navigator.of(context).pushNamedAndRemoveUntil('/official_details_entry', (route) => false);
-              } else {
-                developer.log("Official email verified, navigating to official dashboard.", name: "VerifyEmailScreen");
-                Navigator.of(context).pushNamedAndRemoveUntil('/official_dashboard', (route) => false);
-              }
-            } else {
-              developer.log("Citizen email verified, navigating to app.", name: "VerifyEmailScreen");
-              Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
-            }
+            developer.log("Citizen email verified, navigating to app.", name: "VerifyEmailScreen");
+            Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
           } else {
             // Fallback if profile couldn't be loaded, though unlikely if user exists
             developer.log("Email verified, but profile not loaded. Navigating to role selection.", name: "VerifyEmailScreen");

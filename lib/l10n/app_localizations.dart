@@ -134,12 +134,6 @@ abstract class AppLocalizations {
   /// **'Citizen'**
   String get citizen;
 
-  /// No description provided for @official.
-  ///
-  /// In en, this message translates to:
-  /// **'Official'**
-  String get official;
-
   /// No description provided for @letsGetStarted.
   ///
   /// In en, this message translates to:
@@ -217,18 +211,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Already have an account?'**
   String get alreadyHaveAnAccount;
-
-  /// No description provided for @officialLoginTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Official Login'**
-  String get officialLoginTitle;
-
-  /// No description provided for @officialSignUpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Official Registration'**
-  String get officialSignUpTitle;
 
   /// No description provided for @enterYourOfficialDetails.
   ///
@@ -331,12 +313,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Public Dashboard'**
   String get publicDashboard;
-
-  /// No description provided for @officialDashboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Official Dashboard'**
-  String get officialDashboard;
 
   /// No description provided for @notifications.
   ///
@@ -734,77 +710,11 @@ abstract class AppLocalizations {
   /// **'Mobile No'**
   String get mobileNo;
 
-  /// No description provided for @officialAccountPendingVerification.
-  ///
-  /// In en, this message translates to:
-  /// **'Your official account is pending admin verification.'**
-  String get officialAccountPendingVerification;
-
-  /// No description provided for @accessDeniedOfficialOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Access Denied. This portal is for authorized officials only.'**
-  String get accessDeniedOfficialOnly;
-
-  /// No description provided for @loginSucceededFailedToVerify.
-  ///
-  /// In en, this message translates to:
-  /// **'Login succeeded but failed to verify official status. Please try again.'**
-  String get loginSucceededFailedToVerify;
-
-  /// No description provided for @officialLoginFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Official login failed.'**
-  String get officialLoginFailed;
-
-  /// No description provided for @unexpectedErrorOfficialLogin.
-  ///
-  /// In en, this message translates to:
-  /// **'An unexpected error occurred during official login.'**
-  String get unexpectedErrorOfficialLogin;
-
-  /// No description provided for @googleSignInSuccessfulPendingVerification.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Sign-In successful. Your official account is pending admin verification.'**
-  String get googleSignInSuccessfulPendingVerification;
-
-  /// No description provided for @googleAccountNotRecognized.
-  ///
-  /// In en, this message translates to:
-  /// **'Google account not recognized as an official. Please use official credentials or contact admin.'**
-  String get googleAccountNotRecognized;
-
-  /// No description provided for @googleSignInSuccessfulFailedToVerify.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Sign-In successful but failed to verify official status.'**
-  String get googleSignInSuccessfulFailedToVerify;
-
-  /// No description provided for @googleSignInCancelledOrFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Sign-In was cancelled or failed.'**
-  String get googleSignInCancelledOrFailed;
-
-  /// No description provided for @googleSignInOfficialsFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Sign-In for officials failed.'**
-  String get googleSignInOfficialsFailed;
-
   /// No description provided for @fullNameIsRequired.
   ///
   /// In en, this message translates to:
   /// **'Full Name is Required'**
   String get fullNameIsRequired;
-
-  /// No description provided for @officialEmailIsRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Official Email is required'**
-  String get officialEmailIsRequired;
 
   /// No description provided for @mobileNumberIsRequired.
   ///
@@ -1003,6 +913,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this issue? This action cannot be undone.'**
   String get deleteIssueConfirmation;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Unavailable'**
+  String get locationUnavailable;
+
+  /// No description provided for @locationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Error'**
+  String get locationError;
+
+  /// No description provided for @cachedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached Data'**
+  String get cachedData;
 }
 
 class _AppLocalizationsDelegate

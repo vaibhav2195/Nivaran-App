@@ -27,9 +27,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get citizen => 'Citizen';
 
   @override
-  String get official => 'Official';
-
-  @override
   String get letsGetStarted => 'Let\'s Get Started';
 
   @override
@@ -67,12 +64,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alreadyHaveAnAccount => 'Already have an account?';
-
-  @override
-  String get officialLoginTitle => 'Official Login';
-
-  @override
-  String get officialSignUpTitle => 'Official Registration';
 
   @override
   String get enterYourOfficialDetails => 'Enter Your Official Details';
@@ -125,9 +116,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get publicDashboard => 'Public Dashboard';
-
-  @override
-  String get officialDashboard => 'Official Dashboard';
 
   @override
   String get notifications => 'Notifications';
@@ -339,49 +327,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mobileNo => 'Mobile No';
 
   @override
-  String get officialAccountPendingVerification =>
-      'Your official account is pending admin verification.';
-
-  @override
-  String get accessDeniedOfficialOnly =>
-      'Access Denied. This portal is for authorized officials only.';
-
-  @override
-  String get loginSucceededFailedToVerify =>
-      'Login succeeded but failed to verify official status. Please try again.';
-
-  @override
-  String get officialLoginFailed => 'Official login failed.';
-
-  @override
-  String get unexpectedErrorOfficialLogin =>
-      'An unexpected error occurred during official login.';
-
-  @override
-  String get googleSignInSuccessfulPendingVerification =>
-      'Google Sign-In successful. Your official account is pending admin verification.';
-
-  @override
-  String get googleAccountNotRecognized =>
-      'Google account not recognized as an official. Please use official credentials or contact admin.';
-
-  @override
-  String get googleSignInSuccessfulFailedToVerify =>
-      'Google Sign-In successful but failed to verify official status.';
-
-  @override
-  String get googleSignInCancelledOrFailed =>
-      'Google Sign-In was cancelled or failed.';
-
-  @override
-  String get googleSignInOfficialsFailed =>
-      'Google Sign-In for officials failed.';
-
-  @override
   String get fullNameIsRequired => 'Full Name is Required';
-
-  @override
-  String get officialEmailIsRequired => 'Official Email is required';
 
   @override
   String get mobileNumberIsRequired => 'Mobile number is Required';
@@ -485,4 +431,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteIssueConfirmation =>
       'Are you sure you want to delete this issue? This action cannot be undone.';
+
+  @override
+  String get locationUnavailable => 'Location Unavailable';
+
+  @override
+  String get locationError => 'Location Error';
+
+  @override
+  String get cachedData => 'Cached Data';
 }

@@ -69,22 +69,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
                 SizedBox(height: screenHeight * 0.15), 
                 
                 AuthButton(
-                  text: AppLocalizations.of(context)!.official,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/auth_options', arguments: 'official');
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.015), // Reduced space for "or"
-                _buildOrDivider(context),
-                SizedBox(height: screenHeight * 0.015),
-                AuthButton(
                   text: AppLocalizations.of(context)!.citizen,
                   onPressed: () {
                     Navigator.pushNamed(context, '/auth_options', arguments: 'citizen');
                   },
                 ),
-                SizedBox(height: screenHeight * 0.015),
-                _buildOrDivider(context),
                 SizedBox(height: screenHeight * 0.015),
                 AuthButton( 
                   text: AppLocalizations.of(context)!.publicDashboard,
@@ -112,33 +101,4 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with WidgetsB
     );
   }
 
-  Widget _buildOrDivider(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.orContinueWith.split(' ')[0], // Hack to get 'or'
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
-// Widget _buildOrDivider(BuildContext context) {
-//   return Padding(
-//     padding: const EdgeInsets.symmetric(vertical: 8.0),
-//     child: Row(
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       children: [
-//         Text(
-//           'or',
-//           style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-//         ),
-//       ],
-//     ),
-//   );
-// }
