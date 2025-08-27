@@ -23,50 +23,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    // Defer stream setup until after the first frame and when UserProfileService is likely ready
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // Check UserProfileService status before setting up the stream
-        final userProfileService = Provider.of<UserProfileService>(context, listen: false);
-        if (userProfileService.currentUserProfile != null) {
-          setState(() {
-            _isUserProfileAvailable = true;
-          });
-          _setupNotificationsStream();
-        } else if (!userProfileService.isLoadingProfile) {
-          // Profile is null and not loading, likely user is logged out or error
-          setState(() {
-            _isUserProfileAvailable = false;
-          });
-           developer.log("NotificationsScreen initState: User profile null and not loading.", name: "NotificationsScreen");
-        }
-        // If isLoadingProfile is true, the build method will show a loader
-      }
-    });
+    // Listen to UserProfileService for changes
+    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+    userProfileService.addListener(_onProfileChanged);
+
+    // Initial check
+    _onProfileChanged();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // This might be called if UserProfileService notifies changes.
-    // Re-evaluate if stream needs to be set up.
-    final userProfileService = Provider.of<UserProfileService>(context, listen: false); // listen:false is fine here
-    if (userProfileService.currentUserProfile != null && !_isUserProfileAvailable) {
-      developer.log("NotificationsScreen didChangeDependencies: User profile became available. Setting up stream.", name: "NotificationsScreen");
-      if (mounted) {
-        setState(() {
-          _isUserProfileAvailable = true;
-        });
-        _setupNotificationsStream();
-      }
-    } else if (userProfileService.currentUserProfile == null && _isUserProfileAvailable) {
-       developer.log("NotificationsScreen didChangeDependencies: User profile became null. Clearing stream.", name: "NotificationsScreen");
-       if (mounted) {
-         setState(() {
-           _isUserProfileAvailable = false;
-           _notificationsStream = Stream.value([]); // Clear stream
-         });
-       }
+  @override
+  void dispose() {
+    Provider.of<UserProfileService>(context, listen: false).removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (!mounted) return;
+    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+    final isProfileAvailable = userProfileService.currentUserProfile != null;
+    if (isProfileAvailable != _isUserProfileAvailable) {
+      setState(() {
+        _isUserProfileAvailable = isProfileAvailable;
+        if (_isUserProfileAvailable) {
+          _setupNotificationsStream();
+        } else {
+          _notificationsStream = Stream.value([]);
+        }
+      });
     }
   }
 

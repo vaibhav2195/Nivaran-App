@@ -2,7 +2,9 @@ import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // <-- ADDED
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:modern_auth_app/l10n/app_localizations.dart';
 import 'package:modern_auth_app/screens/auth/auth_options_screen.dart';
@@ -26,13 +28,105 @@ import 'package:modern_auth_app/services/notification_service.dart';
 import 'package:modern_auth_app/services/user_profile_service.dart';
 import 'package:modern_auth_app/services/local_data_service.dart';
 import 'package:modern_auth_app/services/offline_sync_service.dart';
+import 'package:modern_auth_app/services/app_check_test_service.dart';
 import 'package:provider/provider.dart';
 
 // Top-level background message handler (as required by FCM)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(); // Ensure Firebase is initialized for background isolates
-  developer.log("Handling a background message: ${message.messageId}", name: "MainBGHandler");
+  await Firebase.initializeApp();
+
+  developer.log(
+    "Handling a background message: ${message.messageId}",
+    name: "MainBGHandler",
+  );
+  developer.log(
+    "Background message data: ${message.data}",
+    name: "MainBGHandler",
+  );
+
+  // Initialize local notifications for background handling
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings();
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+  );
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  final notification = message.notification;
+  if (notification != null) {
+    final notificationType = message.data['type'] ?? 'general';
+    final issueId = message.data['issueId'];
+    final navigateTo = message.data['navigateTo'] ?? '/notifications';
+
+    // Create payload for navigation
+    final payload = '$navigateTo|${issueId ?? ''}';
+
+    // Determine channel based on notification type
+    String channelId = 'nivaran_default_channel';
+    String channelName = 'General Notifications';
+
+    switch (notificationType.toLowerCase()) {
+      case 'status_update':
+      case 'new_comment':
+        channelId = 'nivaran_comments_channel';
+        channelName = 'Comments & Updates';
+        break;
+      case 'urgent':
+      case 'new_issue_for_official':
+        channelId = 'nivaran_urgent_channel';
+        channelName = 'Urgent Notifications';
+        break;
+    }
+
+    await flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          channelName,
+          channelDescription: 'Nivaran app notifications',
+          importance:
+              channelId == 'nivaran_urgent_channel'
+                  ? Importance.max
+                  : Importance.high,
+          priority:
+              channelId == 'nivaran_urgent_channel'
+                  ? Priority.max
+                  : Priority.high,
+          icon: '@mipmap/ic_launcher',
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+          styleInformation: BigTextStyleInformation(
+            notification.body ?? '',
+            contentTitle: notification.title,
+            summaryText: 'Nivaran',
+          ),
+          playSound: true,
+          enableVibration: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'default',
+        ),
+      ),
+      payload: payload,
+    );
+
+    developer.log(
+      "Background notification shown: ${notification.title}",
+      name: "MainBGHandler",
+    );
+  }
 }
 
 // Global navigator key
@@ -43,6 +137,20 @@ void main() async {
 
   await Firebase.initializeApp();
 
+  // Configure App Check with debug token for both debug and release builds
+  await FirebaseAppCheck.instance.activate(
+    webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+    // Use debug provider for both debug and release builds to allow manual APK distribution
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.appAttest,
+  );
+
+  // Set the debug token for App Check
+  await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
+
+  // Test App Check functionality
+  await AppCheckTestService.testAppCheckToken();
+
   // Set the background messaging handler for FCM
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -50,15 +158,24 @@ void main() async {
     MultiProvider(
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
-        ChangeNotifierProvider<UserProfileService>(create: (_) => UserProfileService()),
-        Provider<NotificationService>(create: (_) => NotificationService(navigatorKey: navigatorKey)),
+        ChangeNotifierProvider<UserProfileService>(
+          create: (_) => UserProfileService(),
+        ),
+        Provider<NotificationService>(
+          create: (_) => NotificationService(navigatorKey: navigatorKey),
+        ),
         ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider<ConnectivityService>(create: (_) => ConnectivityService.instance),
+        ChangeNotifierProvider<ConnectivityService>(
+          create: (_) => ConnectivityService.instance,
+        ),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
         Provider<ImageUploadService>(create: (_) => ImageUploadService()),
         Provider<LocalDataService>(create: (_) => LocalDataService()),
         ChangeNotifierProvider<OfflineSyncService>(
-          create: (context) => OfflineSyncService(Provider.of<ConnectivityService>(context, listen: false)),
+          create:
+              (context) => OfflineSyncService(
+                Provider.of<ConnectivityService>(context, listen: false),
+              ),
         ),
       ],
       child: const MyApp(),
@@ -80,36 +197,81 @@ class _MyAppState extends State<MyApp> {
     // Initialize services after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        final notificationService = Provider.of<NotificationService>(context, listen: false);
-        await notificationService.initialize().then((_) {
-          developer.log("NotificationService initialized from MyApp", name: "MyApp");
-        }).catchError((e) {
-          developer.log("Error initializing NotificationService from MyApp: $e", name: "MyApp");
-        });
+        final notificationService = Provider.of<NotificationService>(
+          context,
+          listen: false,
+        );
+        await notificationService
+            .initialize()
+            .then((_) {
+              developer.log(
+                "NotificationService initialized from MyApp",
+                name: "MyApp",
+              );
+            })
+            .catchError((e) {
+              developer.log(
+                "Error initializing NotificationService from MyApp: $e",
+                name: "MyApp",
+              );
+            });
 
         // Initialize ConnectivityService
-        final connectivityService = Provider.of<ConnectivityService>(context, listen: false);
-        await connectivityService.initialize().then((_) {
-          developer.log("ConnectivityService initialized", name: "MyApp");
-        }).catchError((e) {
-          developer.log("Error initializing ConnectivityService: $e", name: "MyApp");
-        });
+        final connectivityService = Provider.of<ConnectivityService>(
+          context,
+          listen: false,
+        );
+        await connectivityService
+            .initialize()
+            .then((_) {
+              developer.log("ConnectivityService initialized", name: "MyApp");
+            })
+            .catchError((e) {
+              developer.log(
+                "Error initializing ConnectivityService: $e",
+                name: "MyApp",
+              );
+            });
 
         // Initialize LocalDataService database
-        final localDataService = Provider.of<LocalDataService>(context, listen: false);
-        await localDataService.initializeDatabase().then((_) {
-          developer.log("LocalDataService database initialized", name: "MyApp");
-        }).catchError((e) {
-          developer.log("Error initializing LocalDataService database: $e", name: "MyApp");
-        });
+        final localDataService = Provider.of<LocalDataService>(
+          context,
+          listen: false,
+        );
+        await localDataService
+            .initializeDatabase()
+            .then((_) {
+              developer.log(
+                "LocalDataService database initialized",
+                name: "MyApp",
+              );
+            })
+            .catchError((e) {
+              developer.log(
+                "Error initializing LocalDataService database: $e",
+                name: "MyApp",
+              );
+            });
 
         // Initialize OfflineSyncService
-        final offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
-        await offlineSyncService.initialize().then((_) {
-          developer.log("OfflineSyncService initialized with auto-sync", name: "MyApp");
-        }).catchError((e) {
-          developer.log("Error initializing OfflineSyncService: $e", name: "MyApp");
-        });
+        final offlineSyncService = Provider.of<OfflineSyncService>(
+          context,
+          listen: false,
+        );
+        await offlineSyncService
+            .initialize()
+            .then((_) {
+              developer.log(
+                "OfflineSyncService initialized with auto-sync",
+                name: "MyApp",
+              );
+            })
+            .catchError((e) {
+              developer.log(
+                "Error initializing OfflineSyncService: $e",
+                name: "MyApp",
+              );
+            });
       }
     });
   }
@@ -122,14 +284,42 @@ class _MyAppState extends State<MyApp> {
       builder: (context, localeProvider, homeWidget) {
         TextTheme defaultTextTheme = Theme.of(context).textTheme;
         TextTheme appTextTheme = defaultTextTheme.copyWith(
-          displayLarge: defaultTextTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
-          displayMedium: defaultTextTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
-          headlineMedium: defaultTextTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 26),
-          headlineSmall: defaultTextTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 22),
-          titleLarge: defaultTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 20),
-          bodyLarge: defaultTextTheme.bodyLarge?.copyWith(color: Colors.black87, fontSize: 16),
-          bodyMedium: defaultTextTheme.bodyMedium?.copyWith(color: Colors.black54, fontSize: 14),
-          labelLarge: defaultTextTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.white),
+          displayLarge: defaultTextTheme.displayLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+          displayMedium: defaultTextTheme.displayMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+          headlineMedium: defaultTextTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+            fontSize: 26,
+          ),
+          headlineSmall: defaultTextTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+            fontSize: 22,
+          ),
+          titleLarge: defaultTextTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+            fontSize: 20,
+          ),
+          bodyLarge: defaultTextTheme.bodyLarge?.copyWith(
+            color: Colors.black87,
+            fontSize: 16,
+          ),
+          bodyMedium: defaultTextTheme.bodyMedium?.copyWith(
+            color: Colors.black54,
+            fontSize: 14,
+          ),
+          labelLarge: defaultTextTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            color: Colors.white,
+          ),
         );
 
         return MaterialApp(
@@ -149,7 +339,10 @@ class _MyAppState extends State<MyApp> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                textStyle: appTextTheme.labelLarge?.copyWith(letterSpacing: 0.5, color: Colors.white),
+                textStyle: appTextTheme.labelLarge?.copyWith(
+                  letterSpacing: 0.5,
+                  color: Colors.white,
+                ),
                 minimumSize: const Size(double.infinity, 50),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -158,21 +351,27 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
-                style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              textStyle: appTextTheme.labelLarge?.copyWith(color: Colors.black),
-              minimumSize: const Size(double.infinity, 50),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              side: const BorderSide(color: Colors.black, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                textStyle: appTextTheme.labelLarge?.copyWith(
+                  color: Colors.black,
+                ),
+                minimumSize: const Size(double.infinity, 50),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: const BorderSide(color: Colors.black, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
               ),
-            )),
+            ),
             inputDecorationTheme: InputDecorationTheme(
               hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
               filled: true,
               fillColor: Colors.grey[100],
-              contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 16.0,
+                horizontal: 16.0,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
                 borderSide: BorderSide(color: Colors.grey[300]!, width: 1.0),
@@ -197,10 +396,9 @@ class _MyAppState extends State<MyApp> {
             ),
             textTheme: appTextTheme,
             visualDensity: VisualDensity.adaptivePlatformDensity,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal).copyWith(
-              secondary: Colors.teal,
-              surface: Colors.white,
-            ),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.teal,
+            ).copyWith(secondary: Colors.teal, surface: Colors.white),
           ),
           debugShowCheckedModeBanner: false,
           locale: localeProvider.locale,
@@ -212,7 +410,8 @@ class _MyAppState extends State<MyApp> {
             '/initial_auth_check': (context) => const InitialAuthCheck(),
             '/role_selection': (context) => const RoleSelectionScreen(),
             '/auth_options': (context) {
-              final args = ModalRoute.of(context)!.settings.arguments as String?;
+              final args =
+                  ModalRoute.of(context)!.settings.arguments as String?;
               return AuthOptionsScreen(userType: args ?? 'citizen');
             },
             '/login': (context) => const LoginScreen(),
@@ -221,7 +420,8 @@ class _MyAppState extends State<MyApp> {
             '/app': (context) => const MainAppScaffold(),
             '/notifications': (context) => const NotificationsScreen(),
             '/issue_details': (context) {
-              final issueId = ModalRoute.of(context)!.settings.arguments as String?;
+              final issueId =
+                  ModalRoute.of(context)!.settings.arguments as String?;
               return IssueDetailsScreen(issueId: issueId ?? 'error_no_id');
             },
             '/public_dashboard': (context) => const PublicDashboardScreen(),
@@ -257,7 +457,10 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
   void initState() {
     super.initState();
     // Get the service once and add the listener
-    _connectivityService = Provider.of<ConnectivityService>(context, listen: false);
+    _connectivityService = Provider.of<ConnectivityService>(
+      context,
+      listen: false,
+    );
     _connectivityService.addListener(_onConnectivityChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -284,7 +487,10 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
 
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
-    final userProfileService = Provider.of<UserProfileService>(context, listen: false);
+    final userProfileService = Provider.of<UserProfileService>(
+      context,
+      listen: false,
+    );
 
     // Use a local variable for the navigator to avoid using context after an async gap
     final navigator = Navigator.of(context);
@@ -296,16 +502,22 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
           const Duration(seconds: 5),
         );
       } catch (e) {
-        developer.log("InitialAuthCheck: Profile fetch timed out or failed: $e", name: "InitialAuthCheck");
+        developer.log(
+          "InitialAuthCheck: Profile fetch timed out or failed: $e",
+          name: "InitialAuthCheck",
+        );
         // Continue with null profile - will be handled below
       }
-      
+
       if (!mounted) return;
 
       final profile = userProfileService.currentUserProfile;
 
       if (!user.emailVerified) {
-        await navigator.pushNamedAndRemoveUntil('/verify_email_screen', (route) => false);
+        await navigator.pushNamedAndRemoveUntil(
+          '/verify_email_screen',
+          (route) => false,
+        );
         return;
       }
 
@@ -313,16 +525,29 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
         await navigator.pushNamedAndRemoveUntil('/app', (route) => false);
       } else if (isOnline) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not load user profile. Please try again.")));
-          await navigator.pushNamedAndRemoveUntil('/role_selection', (route) => false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Could not load user profile. Please try again."),
+            ),
+          );
+          await navigator.pushNamedAndRemoveUntil(
+            '/role_selection',
+            (route) => false,
+          );
         }
       } else {
         // When offline and no profile loaded, still allow access to main app
-        developer.log("InitialAuthCheck: Offline mode - allowing access to main app without profile", name: "InitialAuthCheck");
+        developer.log(
+          "InitialAuthCheck: Offline mode - allowing access to main app without profile",
+          name: "InitialAuthCheck",
+        );
         await navigator.pushNamedAndRemoveUntil('/app', (route) => false);
       }
     } else {
-      await navigator.pushNamedAndRemoveUntil('/role_selection', (route) => false);
+      await navigator.pushNamedAndRemoveUntil(
+        '/role_selection',
+        (route) => false,
+      );
     }
   }
 
@@ -330,7 +555,9 @@ class _InitialAuthCheckState extends State<InitialAuthCheck> {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(semanticsLabel: "Checking authentication..."),
+        child: CircularProgressIndicator(
+          semanticsLabel: "Checking authentication...",
+        ),
       ),
     );
   }

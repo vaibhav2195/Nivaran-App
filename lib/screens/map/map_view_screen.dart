@@ -535,6 +535,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
             top: topPadding + 10, // Position FAB below status bar
             right: 16,
             child: FloatingActionButton(
+              heroTag: null,
               mini: true,
               onPressed: _showFilterDialog,
               backgroundColor: Colors.white,
@@ -547,6 +548,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
             top: topPadding + 10, // Align with filter button or adjust
             left: 16,
             child: FloatingActionButton(
+              heroTag: null,
               mini: true,
               onPressed: _currentPosition != null ? _animateToUserLocation : null,
               backgroundColor: Colors.white,
@@ -562,7 +564,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
               children: [
                 FloatingActionButton(
                   mini: true,
-                  heroTag: 'zoomInButton', // Unique heroTag
+                  heroTag: null,
                   onPressed: () {
                     _mapController?.animateCamera(CameraUpdate.zoomIn());
                   },
@@ -572,7 +574,7 @@ class _MapViewScreenState extends State<MapViewScreen> with AutomaticKeepAliveCl
                 const SizedBox(height: 8),
                 FloatingActionButton(
                   mini: true,
-                  heroTag: 'zoomOutButton', // Unique heroTag
+                  heroTag: null,
                   onPressed: () {
                     _mapController?.animateCamera(CameraUpdate.zoomOut());
                   },

@@ -11,6 +11,10 @@ android {
     compileSdk = 35
 
     ndkVersion = "27.0.12077973" // Keep your specified NDK version
+    
+    buildFeatures {
+        buildConfig = true // Enable BuildConfig generation
+    }
 
     compileOptions {
         // Flag to enable support for the new language APIs
@@ -34,6 +38,9 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true // ADDED: Good to have, especially with many dependencies
+        
+        // Add App Check debug token as a build config field
+        buildConfigField("String", "APP_CHECK_DEBUG_TOKEN", "\"1231047E-3829-4417-B789-EFA8DB5BF29E\"")
     }
 
     buildTypes {
@@ -78,6 +85,10 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
 
+    // App Check dependencies
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.android.gms:play-services-safetynet:18.1.0") // SafetyNet is a fallback
+    implementation("com.google.firebase:firebase-appcheck-debug:17.0.0")
 
     // Add the core library desugaring dependency
     // Check for the latest version: https://mvnrepository.com/artifact/com.android.tools/desugar_jdk_libs
