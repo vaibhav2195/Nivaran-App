@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:modern_auth_app/services/fcm_token_service.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -21,6 +22,9 @@ class NotificationService {
 
     // Request permissions
     await requestPermissions();
+
+    // Initialize FCM token service
+    await FCMTokenService.initialize();
 
     // Get and log FCM token
     final fcmToken = await _firebaseMessaging.getToken();
@@ -57,13 +61,13 @@ class NotificationService {
   }
 
   Future<void> _createNotificationChannels() async {
-    final androidImplementation =
+    final androidPlugin =
         _flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
             >();
 
-    if (androidImplementation != null) {
+    if (androidPlugin != null) {
       // Default channel for general notifications
       const defaultChannel = AndroidNotificationChannel(
         'nivaran_default_channel',
@@ -74,18 +78,7 @@ class NotificationService {
         enableVibration: true,
       );
 
-      // High priority channel for urgent notifications
-      const urgentChannel = AndroidNotificationChannel(
-        'nivaran_urgent_channel',
-        'Urgent Notifications',
-        description: 'Urgent notifications requiring immediate attention',
-        importance: Importance.max,
-        playSound: true,
-        enableVibration: true,
-        enableLights: true,
-      );
-
-      // Comments channel
+      // Channel for comments and status updates
       const commentsChannel = AndroidNotificationChannel(
         'nivaran_comments_channel',
         'Comments & Updates',
@@ -95,31 +88,39 @@ class NotificationService {
         enableVibration: true,
       );
 
-      await androidImplementation.createNotificationChannel(defaultChannel);
-      await androidImplementation.createNotificationChannel(urgentChannel);
-      await androidImplementation.createNotificationChannel(commentsChannel);
+      // Channel for urgent notifications
+      const urgentChannel = AndroidNotificationChannel(
+        'nivaran_urgent_channel',
+        'Urgent Notifications',
+        description: 'Urgent notifications requiring immediate attention',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      await androidPlugin.createNotificationChannel(defaultChannel);
+      await androidPlugin.createNotificationChannel(commentsChannel);
+      await androidPlugin.createNotificationChannel(urgentChannel);
     }
   }
 
   Future<void> _initializeLocalNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
-
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
 
     await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
   }
@@ -132,53 +133,55 @@ class NotificationService {
 
     if (response.payload != null) {
       final parts = response.payload!.split('|');
-      if (parts.length >= 2) {
-        final navigateTo = parts[0];
-        final issueId = parts.length > 1 ? parts[1] : null;
-        _navigateToScreen(navigateTo, issueId);
+      final navigateTo = parts.isNotEmpty ? parts[0] : '/notifications';
+      final issueId = parts.length > 1 ? parts[1] : null;
+
+      if (navigateTo == '/issue_details' &&
+          issueId != null &&
+          issueId.isNotEmpty) {
+        navigatorKey.currentState?.pushNamed(
+          '/issue_details',
+          arguments: issueId,
+        );
+      } else {
+        navigatorKey.currentState?.pushNamed(navigateTo);
       }
+    } else {
+      navigatorKey.currentState?.pushNamed('/notifications');
     }
   }
 
   void _handleMessage(RemoteMessage message) {
-    log('Handling message: ${message.messageId}', name: 'NotificationService');
-    log('Message data: ${message.data}', name: 'NotificationService');
-
-    final navigateTo = message.data['navigateTo'] ?? '/notifications';
-    final issueId = message.data['issueId'];
-
-    _navigateToScreen(navigateTo, issueId);
-  }
-
-  void _navigateToScreen(String navigateTo, String? issueId) {
-    final navigator = navigatorKey.currentState;
-    if (navigator == null) {
-      log('Navigator not available', name: 'NotificationService');
-      return;
-    }
-
     log(
-      'Navigating to: $navigateTo with issueId: $issueId',
+      'Message handled (tapped): ${message.messageId}',
       name: 'NotificationService',
     );
+    log('Message data: ${message.data}', name: 'NotificationService');
 
-    switch (navigateTo) {
-      case '/issue_details':
-        if (issueId != null && issueId.isNotEmpty) {
-          navigator.pushNamed('/issue_details', arguments: issueId);
-        } else {
-          navigator.pushNamed('/notifications');
-        }
-        break;
-      case '/app':
-        navigator.pushNamedAndRemoveUntil('/app', (route) => false);
-        break;
-      case '/notifications':
-        navigator.pushNamed('/notifications');
-        break;
-      default:
-        navigator.pushNamed(navigateTo);
-        break;
+    final notificationType = message.data['type'] ?? 'general';
+    final issueId = message.data['issueId'];
+    final navigateTo = message.data['navigateTo'] ?? '/notifications';
+
+    // Navigate based on notification type and data
+    if (navigateTo == '/issue_details' &&
+        issueId != null &&
+        issueId.isNotEmpty) {
+      navigatorKey.currentState?.pushNamed(
+        '/issue_details',
+        arguments: issueId,
+      );
+    } else if (notificationType == 'new_comment' ||
+        notificationType == 'status_update') {
+      if (issueId != null && issueId.isNotEmpty) {
+        navigatorKey.currentState?.pushNamed(
+          '/issue_details',
+          arguments: issueId,
+        );
+      } else {
+        navigatorKey.currentState?.pushNamed('/notifications');
+      }
+    } else {
+      navigatorKey.currentState?.pushNamed(navigateTo);
     }
   }
 
@@ -193,32 +196,24 @@ class NotificationService {
     // Create payload for navigation
     final payload = '$navigateTo|${issueId ?? ''}';
 
-    // Determine notification channel and icon based on type
+    // Determine channel and styling based on notification type
     String channelId = 'nivaran_default_channel';
     String channelName = 'General Notifications';
-    IconData iconData = Icons.notifications;
+    Importance importance = Importance.high;
+    Priority priority = Priority.high;
 
     switch (notificationType.toLowerCase()) {
+      case 'new_comment':
       case 'status_update':
         channelId = 'nivaran_comments_channel';
         channelName = 'Comments & Updates';
-        iconData = Icons.flag_circle;
-        break;
-      case 'new_comment':
-        channelId = 'nivaran_comments_channel';
-        channelName = 'Comments & Updates';
-        iconData = Icons.chat_bubble;
         break;
       case 'urgent':
       case 'new_issue_for_official':
         channelId = 'nivaran_urgent_channel';
         channelName = 'Urgent Notifications';
-        iconData = Icons.priority_high;
-        break;
-      case 'admin_message':
-        channelId = 'nivaran_default_channel';
-        channelName = 'General Notifications';
-        iconData = Icons.admin_panel_settings;
+        importance = Importance.max;
+        priority = Priority.max;
         break;
     }
 
@@ -231,14 +226,8 @@ class NotificationService {
           channelId,
           channelName,
           channelDescription: 'Nivaran app notifications',
-          importance:
-              channelId == 'nivaran_urgent_channel'
-                  ? Importance.max
-                  : Importance.high,
-          priority:
-              channelId == 'nivaran_urgent_channel'
-                  ? Priority.max
-                  : Priority.high,
+          importance: importance,
+          priority: priority,
           icon: '@mipmap/ic_launcher',
           largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           styleInformation: BigTextStyleInformation(
@@ -248,18 +237,14 @@ class NotificationService {
           ),
           playSound: true,
           enableVibration: true,
-          enableLights: true,
-          ledColor: const Color(0xFF00BCD4),
-          ledOnMs: 1000,
-          ledOffMs: 500,
+          ticker: notification.title,
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
           sound: 'default',
-          subtitle: _getSubtitleForType(notificationType),
-          threadIdentifier: notificationType,
+          subtitle: notificationType == 'urgent' ? 'Urgent' : null,
         ),
       ),
       payload: payload,
@@ -271,23 +256,7 @@ class NotificationService {
     );
   }
 
-  String _getSubtitleForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'status_update':
-        return 'Issue Update';
-      case 'new_comment':
-        return 'New Comment';
-      case 'admin_message':
-        return 'Admin Message';
-      case 'new_issue_for_official':
-        return 'New Issue';
-      default:
-        return 'Nivaran';
-    }
-  }
-
   Future<void> requestPermissions() async {
-    // Request FCM permissions
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
       announcement: false,
@@ -299,28 +268,27 @@ class NotificationService {
     );
 
     log(
-      'FCM Permission Status: ${settings.authorizationStatus}',
+      'FCM Permission requested. Status: ${settings.authorizationStatus}',
       name: 'NotificationService',
     );
 
-    // Request local notification permissions for Android 13+
-    final androidImplementation =
+    // Also request local notification permissions for iOS
+    final localNotificationPlugin =
         _flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
+              IOSFlutterLocalNotificationsPlugin
             >();
 
-    if (androidImplementation != null) {
-      final granted =
-          await androidImplementation.requestNotificationsPermission();
-      log(
-        'Local Notification Permission: $granted',
-        name: 'NotificationService',
+    if (localNotificationPlugin != null) {
+      await localNotificationPlugin.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
       );
     }
   }
 
-  // Method to get current FCM token
+  // Method to get FCM token for backend integration
   Future<String?> getFCMToken() async {
     try {
       return await _firebaseMessaging.getToken();
@@ -330,7 +298,7 @@ class NotificationService {
     }
   }
 
-  // Method to subscribe to topic (for future use)
+  // Method to subscribe to topics (useful for broadcast notifications)
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
@@ -340,7 +308,7 @@ class NotificationService {
     }
   }
 
-  // Method to unsubscribe from topic (for future use)
+  // Method to unsubscribe from topics
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);

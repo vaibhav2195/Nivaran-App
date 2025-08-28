@@ -19,6 +19,7 @@ import 'package:modern_auth_app/screens/notifications/notifications_screen.dart'
 import 'package:modern_auth_app/screens/public_dashboard_screen.dart';
 import 'package:modern_auth_app/screens/role_selection_screen.dart';
 import 'package:modern_auth_app/screens/profile/unsynced_issues_screen.dart';
+import 'package:modern_auth_app/screens/debug/notification_debug_screen_v2.dart';
 import 'package:modern_auth_app/services/auth_service.dart';
 import 'package:modern_auth_app/services/connectivity_service.dart'; // Add ConnectivityService import
 import 'package:modern_auth_app/services/firestore_service.dart'; // Add FirestoreService import
@@ -58,6 +59,49 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     iOS: initializationSettingsIOS,
   );
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // Create notification channels for background handling
+  final androidPlugin =
+      flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+  if (androidPlugin != null) {
+    // Create all notification channels
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'nivaran_default_channel',
+        'General Notifications',
+        description: 'General app notifications',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'nivaran_comments_channel',
+        'Comments & Updates',
+        description: 'New comments and status updates on your issues',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'nivaran_urgent_channel',
+        'Urgent Notifications',
+        description: 'Urgent notifications requiring immediate attention',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+  }
 
   final notification = message.notification;
   if (notification != null) {
@@ -426,6 +470,8 @@ class _MyAppState extends State<MyApp> {
             },
             '/public_dashboard': (context) => const PublicDashboardScreen(),
             '/unsynced_issues': (context) => const UnsyncedIssuesScreen(),
+            '/notification_debug':
+                (context) => const NotificationDebugScreenV2(),
           },
         );
       },

@@ -23,13 +23,20 @@ class AccountScreen extends StatelessWidget {
             TextButton(
               child: Text(AppLocalizations.of(context)!.cancel),
               onPressed: () {
-                Navigator.of(dialogContext).pop(false); // Dismiss dialog, return false
+                Navigator.of(
+                  dialogContext,
+                ).pop(false); // Dismiss dialog, return false
               },
             ),
             TextButton(
-              child: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red)),
+              child: Text(
+                AppLocalizations.of(context)!.logout,
+                style: const TextStyle(color: Colors.red),
+              ),
               onPressed: () {
-                Navigator.of(dialogContext).pop(true); // Dismiss dialog, return true
+                Navigator.of(
+                  dialogContext,
+                ).pop(true); // Dismiss dialog, return true
               },
             ),
           ],
@@ -45,7 +52,10 @@ class AccountScreen extends StatelessWidget {
       }
       late final UserProfileService userProfileService;
       if (context.mounted) {
-        userProfileService = Provider.of<UserProfileService>(context, listen: false);
+        userProfileService = Provider.of<UserProfileService>(
+          context,
+          listen: false,
+        );
       }
 
       // 1. Clear local user profile data FIRST.
@@ -59,7 +69,9 @@ class AccountScreen extends StatelessWidget {
 
       // 3. Explicit navigation
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/role_selection', (route) => false);
       }
     }
   }
@@ -71,31 +83,44 @@ class AccountScreen extends StatelessWidget {
 
     if (userProfileService.isLoadingProfile && currentUserProfile == null) {
       return Scaffold(
-          appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
-          body: Center(child: CircularProgressIndicator(semanticsLabel: AppLocalizations.of(context)!.profile)));
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
+        body: Center(
+          child: CircularProgressIndicator(
+            semanticsLabel: AppLocalizations.of(context)!.profile,
+          ),
+        ),
+      );
     }
 
     if (currentUserProfile == null) {
       return Scaffold(
-          appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(AppLocalizations.of(context)!.description),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil('/role_selection', (route) => false);
-                  },
-                  child: Text(AppLocalizations.of(context)!.login),
-                )
-              ],
-            ),
-          ));
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.account)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(AppLocalizations.of(context)!.description),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/role_selection',
+                    (route) => false,
+                  );
+                },
+                child: Text(AppLocalizations.of(context)!.login),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    final String displayName = currentUserProfile.username ?? currentUserProfile.fullName ?? currentUserProfile.email?.split('@')[0] ?? 'User';
+    final String displayName =
+        currentUserProfile.username ??
+        currentUserProfile.fullName ??
+        currentUserProfile.email?.split('@')[0] ??
+        'User';
     final String? profileImageUrl = currentUserProfile.profilePhotoUrl;
 
     return Scaffold(
@@ -108,21 +133,34 @@ class AccountScreen extends StatelessWidget {
         children: [
           Container(
             color: Theme.of(context).cardColor,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 24.0,
+            ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 35,
-                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                  backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
-                      ? NetworkImage(profileImageUrl)
-                      : null,
-                  child: (profileImageUrl == null || profileImageUrl.isEmpty) && displayName.isNotEmpty
-                      ? Text(
-                          displayName[0].toUpperCase(),
-                          style: TextStyle(fontSize: 28, color: Theme.of(context).colorScheme.onSecondaryContainer),
-                        )
-                      : null,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.secondaryContainer,
+                  backgroundImage:
+                      profileImageUrl != null && profileImageUrl.isNotEmpty
+                          ? NetworkImage(profileImageUrl)
+                          : null,
+                  child:
+                      (profileImageUrl == null || profileImageUrl.isEmpty) &&
+                              displayName.isNotEmpty
+                          ? Text(
+                            displayName[0].toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 28,
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer,
+                            ),
+                          )
+                          : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -131,14 +169,17 @@ class AccountScreen extends StatelessWidget {
                     children: [
                       Text(
                         displayName,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      if (currentUserProfile.email != null && currentUserProfile.email!.isNotEmpty)
+                      if (currentUserProfile.email != null &&
+                          currentUserProfile.email!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 2.0),
                           child: Text(
                             currentUserProfile.email!,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[700]),
                           ),
                         ),
                     ],
@@ -149,7 +190,6 @@ class AccountScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-
           _buildSectionTitle(context, AppLocalizations.of(context)!.myIssues),
           _buildListTile(
             context: context,
@@ -157,10 +197,12 @@ class AccountScreen extends StatelessWidget {
             title: AppLocalizations.of(context)!.myIssues,
             onTap: () {
               Navigator.push(
-               context,
-               MaterialPageRoute(builder: (context) => const MyReportedIssuesScreen()),
-             );
-            }
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyReportedIssuesScreen(),
+                ),
+              );
+            },
           ),
           _buildListTile(
             context: context,
@@ -178,24 +220,43 @@ class AccountScreen extends StatelessWidget {
             icon: Icons.notifications_active_outlined,
             title: AppLocalizations.of(context)!.notifications,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Notifications - Coming Soon!")));
-            }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Notifications - Coming Soon!")),
+              );
+            },
           ),
           _buildListTile(
             context: context,
             icon: Icons.help_outline_rounded,
             title: AppLocalizations.of(context)!.settings,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Help & Support - Coming Soon!")));
-            }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Help & Support - Coming Soon!")),
+              );
+            },
           ),
           _buildListTile(
             context: context,
             icon: Icons.settings_outlined,
             title: AppLocalizations.of(context)!.settings,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App Settings - Coming Soon!")));
-            }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("App Settings - Coming Soon!")),
+              );
+            },
+          ),
+
+          // Debug section (only show in development)
+          const SizedBox(height: 10),
+          _buildSectionTitle(context, "🔧 Debug Tools"),
+          _buildListTile(
+            context: context,
+            icon: Icons.bug_report,
+            title: "🚨 Push Notification Debug",
+            subtitle: "Test and troubleshoot push notifications",
+            onTap: () {
+              Navigator.pushNamed(context, '/notification_debug');
+            },
           ),
           _buildListTile(
             context: context,
@@ -206,23 +267,22 @@ class AccountScreen extends StatelessWidget {
               icon: const Icon(Icons.arrow_drop_down),
               onChanged: (Locale? newLocale) {
                 if (newLocale != null) {
-                  Provider.of<LocaleProvider>(context, listen: false).setLocale(newLocale);
+                  Provider.of<LocaleProvider>(
+                    context,
+                    listen: false,
+                  ).setLocale(newLocale);
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const InitialRouteManager()),
-                        (route) => false,
+                    MaterialPageRoute(
+                      builder: (context) => const InitialRouteManager(),
+                    ),
+                    (route) => false,
                   );
                 }
               },
               items: const [
-                DropdownMenuItem(
-                  value: Locale('en'),
-                  child: Text("English"),
-                ),
-                DropdownMenuItem(
-                  value: Locale('hi'),
-                  child: Text("हिंदी"),
-                ),
+                DropdownMenuItem(value: Locale('en'), child: Text("English")),
+                DropdownMenuItem(value: Locale('hi'), child: Text("हिंदी")),
               ],
             ),
             onTap: () {
@@ -230,25 +290,33 @@ class AccountScreen extends StatelessWidget {
             },
           ),
 
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.logout, color: Colors.red),
-            label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.red.shade300),
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          const SizedBox(height: 30),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: Text(
+                AppLocalizations.of(context)!.logout,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.red.shade300),
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => _logout(context),
             ),
-            onPressed: () => _logout(context),
           ),
-        ),
-        const SizedBox(height: 30),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
@@ -256,10 +324,10 @@ class AccountScreen extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.outline,
-              letterSpacing: 0.8,
-            ),
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.outline,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
@@ -270,18 +338,34 @@ class AccountScreen extends StatelessWidget {
     required String title,
     required VoidCallback onTap,
     Widget? trailing,
+    String? subtitle,
   }) {
     return Material(
       color: Theme.of(context).cardColor,
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
+        leading: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+          size: 22,
+        ),
         title: Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
-        trailing: trailing ?? Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[500]),
+        subtitle:
+            subtitle != null
+                ? Text(
+                  subtitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                )
+                : null,
+        trailing:
+            trailing ??
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[500]),
         onTap: onTap,
       ),
     );

@@ -202,6 +202,6 @@ custom.yaml
 changelog.md
 previous_nivaran_lib
 test_app_check.md
-storage.rules
+//storage.rules
 database_schema.md
 APP_CHECK_SETUP_GUIDE.md

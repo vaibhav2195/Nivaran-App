@@ -15,6 +15,7 @@ import '../widgets/offline_banner.dart';
 import '../widgets/sync_status_widget.dart';
 import '../utils/update_checker.dart';
 import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 
 class MainAppScaffold extends StatefulWidget {
   const MainAppScaffold({super.key});
@@ -23,7 +24,8 @@ class MainAppScaffold extends StatefulWidget {
   State<MainAppScaffold> createState() => _MainAppScaffoldState();
 }
 
-class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingObserver {
+class _MainAppScaffoldState extends State<MainAppScaffold>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
   User? _currentUser;
   bool _hasCheckedUpdate = false;
@@ -43,7 +45,7 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _currentUser = FirebaseAuth.instance.currentUser;
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _performInitialChecks();
@@ -56,7 +58,10 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
           _currentUser = user;
         });
         if (user == null && ModalRoute.of(context)?.settings.name == '/app') {
-          developer.log("MainAppScaffold: User logged out, AuthWrapper should navigate.", name: "MainAppScaffold");
+          developer.log(
+            "MainAppScaffold: User logged out, AuthWrapper should navigate.",
+            name: "MainAppScaffold",
+          );
         }
       }
     });
@@ -64,13 +69,17 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
     // Listen to sync status changes and show snackbar notifications
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final offlineSyncService = Provider.of<OfflineSyncService>(context, listen: false);
+        final offlineSyncService = Provider.of<OfflineSyncService>(
+          context,
+          listen: false,
+        );
         offlineSyncService.addListener(() {
           if (mounted && offlineSyncService.syncStatus.isNotEmpty) {
             // Show snackbar for important sync status updates
             if (offlineSyncService.syncStatus.contains('complete') ||
                 offlineSyncService.syncStatus.contains('failed') ||
-                (offlineSyncService.isSyncing && offlineSyncService.totalToSync > 0)) {
+                (offlineSyncService.isSyncing &&
+                    offlineSyncService.totalToSync > 0)) {
               SyncStatusSnackBar.show(context, offlineSyncService);
             }
           }
@@ -82,42 +91,64 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
   Future<void> _performInitialChecks() async {
     // Store the context and service reference before any async operations
     if (!mounted) return;
-    
+
     // Store references early to avoid widget lifecycle issues
     final currentContext = context;
     UserProfileService? userProfileService;
     try {
-      userProfileService = Provider.of<UserProfileService>(currentContext, listen: false);
+      userProfileService = Provider.of<UserProfileService>(
+        currentContext,
+        listen: false,
+      );
     } catch (e) {
-      developer.log("MainAppScaffold: Could not get UserProfileService: $e", name: "MainAppScaffold");
+      developer.log(
+        "MainAppScaffold: Could not get UserProfileService: $e",
+        name: "MainAppScaffold",
+      );
       return;
     }
 
     if (mounted && !_hasCheckedUpdate) {
-      developer.log("MainAppScaffold: Performing initial update check.", name: "MainAppScaffold");
+      developer.log(
+        "MainAppScaffold: Performing initial update check.",
+        name: "MainAppScaffold",
+      );
       if (!mounted) return;
-      
+
       // Use timeout for update check to prevent hanging
       try {
-        await UpdateChecker.checkForUpdate(currentContext).timeout(
-          const Duration(seconds: 5),
-        );
+        await UpdateChecker.checkForUpdate(
+          currentContext,
+        ).timeout(const Duration(seconds: 5));
       } catch (e) {
-        developer.log("MainAppScaffold: Update check timed out or failed: $e", name: "MainAppScaffold");
+        developer.log(
+          "MainAppScaffold: Update check timed out or failed: $e",
+          name: "MainAppScaffold",
+        );
       }
-      
-      if(mounted) setState(() => _hasCheckedUpdate = true);
+
+      if (mounted) setState(() => _hasCheckedUpdate = true);
     }
-    
+
     // Fetch the user's profile if it's not already loaded
     // The UserProfileService now uses OfflineFirstDataLoader internally, so this won't hang
     if (!mounted) return;
-    if (_currentUser != null && userProfileService.currentUserProfile?.uid != _currentUser!.uid && !userProfileService.isLoadingProfile) {
-        developer.log("MainAppScaffold: Initial profile fetch triggered because current user profile doesn't match auth user or is null.", name: "MainAppScaffold");
-        await userProfileService.fetchAndSetCurrentUserProfile();
-    } else if (_currentUser != null && userProfileService.currentUserProfile == null && !userProfileService.isLoadingProfile) {
-        developer.log("MainAppScaffold: Current user exists but profile is null, attempting fetch.", name: "MainAppScaffold");
-        await userProfileService.fetchAndSetCurrentUserProfile();
+    if (_currentUser != null &&
+        userProfileService.currentUserProfile?.uid != _currentUser!.uid &&
+        !userProfileService.isLoadingProfile) {
+      developer.log(
+        "MainAppScaffold: Initial profile fetch triggered because current user profile doesn't match auth user or is null.",
+        name: "MainAppScaffold",
+      );
+      await userProfileService.fetchAndSetCurrentUserProfile();
+    } else if (_currentUser != null &&
+        userProfileService.currentUserProfile == null &&
+        !userProfileService.isLoadingProfile) {
+      developer.log(
+        "MainAppScaffold: Current user exists but profile is null, attempting fetch.",
+        name: "MainAppScaffold",
+      );
+      await userProfileService.fetchAndSetCurrentUserProfile();
     }
   }
 
@@ -127,8 +158,8 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
     if (state == AppLifecycleState.resumed) {
       developer.log("MainAppScaffold: App Resumed.", name: "MainAppScaffold");
       if (mounted) {
-         _hasCheckedUpdate = false; 
-         _performInitialChecks(); 
+        _hasCheckedUpdate = false;
+        _performInitialChecks();
       }
     } else if (state == AppLifecycleState.paused) {
       developer.log("MainAppScaffold: App Paused.", name: "MainAppScaffold");
@@ -150,28 +181,44 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
-      developer.log("MainAppScaffold: Current user is null, showing loading. AuthWrapper should redirect.", name: "MainAppScaffold");
-      return const Scaffold(body: Center(child: CircularProgressIndicator(semanticsLabel: "Authenticating...")));
+      developer.log(
+        "MainAppScaffold: Current user is null, showing loading. AuthWrapper should redirect.",
+        name: "MainAppScaffold",
+      );
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(semanticsLabel: "Authenticating..."),
+        ),
+      );
     }
 
     // Check if UserProfile is loading. If so, show loading indicator for the whole scaffold.
     // This prevents individual screens from trying to access a null profile prematurely.
     final userProfileService = Provider.of<UserProfileService>(context);
-    if (userProfileService.isLoadingProfile && userProfileService.currentUserProfile == null) {
-        developer.log("MainAppScaffold: UserProfileService is loading initial profile. Showing loading screen.", name: "MainAppScaffold");
-        return const Scaffold(body: Center(child: CircularProgressIndicator(semanticsLabel: "Loading user profile...")));
+    if (userProfileService.isLoadingProfile &&
+        userProfileService.currentUserProfile == null) {
+      developer.log(
+        "MainAppScaffold: UserProfileService is loading initial profile. Showing loading screen.",
+        name: "MainAppScaffold",
+      );
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            semanticsLabel: "Loading user profile...",
+          ),
+        ),
+      );
     }
-
 
     return Scaffold(
       body: Column(
         children: [
           // Offline banner will only show when app is offline
           const OfflineBanner(),
-          
+
           // Sync status widget will show when syncing or after sync completion
           const SyncStatusWidget(showOnlyWhenSyncing: false),
-          
+
           // Main content area
           Expanded(
             child: IndexedStack(
@@ -184,11 +231,19 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 0 ? Icons.list_alt_rounded : Icons.list_alt_outlined),
+            icon: Icon(
+              _selectedIndex == 0
+                  ? Icons.list_alt_rounded
+                  : Icons.list_alt_outlined,
+            ),
             label: AppLocalizations.of(context)!.feed,
           ),
           BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 1 ? Icons.camera_alt : Icons.camera_alt_outlined),
+            icon: Icon(
+              _selectedIndex == 1
+                  ? Icons.camera_alt
+                  : Icons.camera_alt_outlined,
+            ),
             label: AppLocalizations.of(context)!.report,
           ),
           BottomNavigationBarItem(
@@ -196,15 +251,23 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
             label: AppLocalizations.of(context)!.map,
           ),
           BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 3 ? Icons.notifications : Icons.notifications_outlined),
+            icon: Icon(
+              _selectedIndex == 3
+                  ? Icons.notifications
+                  : Icons.notifications_outlined,
+            ),
             label: AppLocalizations.of(context)!.notifications,
           ),
           BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 4 ? Icons.bar_chart : Icons.bar_chart_outlined),
+            icon: Icon(
+              _selectedIndex == 4 ? Icons.bar_chart : Icons.bar_chart_outlined,
+            ),
             label: AppLocalizations.of(context)!.communityImpact,
           ),
           BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 5 ? Icons.person : Icons.person_outlined),
+            icon: Icon(
+              _selectedIndex == 5 ? Icons.person : Icons.person_outlined,
+            ),
             label: AppLocalizations.of(context)!.profile,
           ),
         ],
@@ -220,6 +283,18 @@ class _MainAppScaffoldState extends State<MainAppScaffold> with WidgetsBindingOb
         selectedFontSize: 12.0,
         unselectedFontSize: 10.0,
       ),
+      // Debug floating action button (only in debug mode)
+      floatingActionButton:
+          kDebugMode
+              ? FloatingActionButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/notification_debug');
+                },
+                backgroundColor: Colors.red,
+                child: const Icon(Icons.bug_report, color: Colors.white),
+                heroTag: "debug_fab",
+              )
+              : null,
     );
   }
 }
