@@ -7,6 +7,40 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
+import 'package:pointycastle/export.dart' as pc;
+
+// Replace this with your real RSA public key in PEM format
+const String updatePublicKeyPem = '''-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1QwIDAQAB
+-----END PUBLIC KEY-----''';
+
+bool verifySignature(String message, String signatureBase64, String publicKeyPem) {
+  try {
+    final lines = publicKeyPem.split('\n');
+    final keyData = lines.sublist(1, lines.length - 2).join('');
+    final publicKeyBytes = base64.decode(keyData);
+    final asn1Parser = pc.ASN1Parser(publicKeyBytes);
+    final topLevelSeq = asn1Parser.nextObject() as pc.ASN1Sequence;
+    final publicKeyBitString = topLevelSeq.elements[1] as pc.ASN1BitString;
+    final publicKeyAsn = pc.ASN1Parser(publicKeyBitString.contentBytes());
+    final publicKeySeq = publicKeyAsn.nextObject() as pc.ASN1Sequence;
+    final modulus = (publicKeySeq.elements[0] as pc.ASN1Integer).valueAsBigInteger;
+    final exponent = (publicKeySeq.elements[1] as pc.ASN1Integer).valueAsBigInteger;
+    final rsaPublicKey = pc.RSAPublicKey(modulus, exponent);
+    final signer = pc.Signer('SHA-256/RSA');
+    final pubParams = pc.PublicKeyParameter<pc.RSAPublicKey>(rsaPublicKey);
+    signer.init(false, pubParams);
+    final sigBytes = base64.decode(signatureBase64);
+    return signer.verifySignature(
+      Uint8List.fromList(utf8.encode(message)),
+      pc.RSASignature(sigBytes),
+    );
+  } catch (e) {
+    return false;
+  }
+}
 
 class UpdateChecker {
   static const String versionUrl = 'https://versionhost-88b2d.web.app/version.json';
@@ -21,10 +55,34 @@ class UpdateChecker {
         final data = json.decode(response.body);
         final latestVersion = data['version'];
         final apkUrl = data['apk_url'];
+        final apkHash = data['apk_sha256'];
+        final signature = data['signature']; // base64-encoded signature of version|apk_url|apk_sha256
+
+        // Compose the message to verify (must match what is signed on the server)
+        final message = '$latestVersion|$apkUrl|$apkHash';
+        final isValid = verifySignature(message, signature, updatePublicKeyPem);
+        if (!isValid) {
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Update Verification Failed'),
+                content: const Text('The update information could not be verified. Please try again later.'),
+                actions: [
+                  TextButton(
+                    child: const Text('OK'),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ],
+              ),
+            );
+          }
+          return;
+        }
 
         if (_isNewerVersion(latestVersion, currentVersion)) {
           if (!context.mounted) return;
-          _showUpdateDialog(context, latestVersion, apkUrl);
+          _showUpdateDialog(context, latestVersion, apkUrl, apkHash);
         }
       }
     } catch (e) {
@@ -43,7 +101,7 @@ class UpdateChecker {
     return false;
   }
 
-  static void _showUpdateDialog(BuildContext context, String version, String apkUrl) {
+  static void _showUpdateDialog(BuildContext context, String version, String apkUrl, String apkHash) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -61,7 +119,7 @@ class UpdateChecker {
               child: const Text('Update Now'),
               onPressed: () {
                 Navigator.of(ctx).pop();
-                _startDownload(context, apkUrl);
+                _startDownload(context, apkUrl, apkHash);
               },
             ),
           ],
@@ -70,7 +128,7 @@ class UpdateChecker {
     );
   }
 
-  static Future<void> _startDownload(BuildContext context, String url) async {
+  static Future<void> _startDownload(BuildContext context, String url, String apkHash) async {
     try {
       // For Android 10 and above, we need to request storage permission differently
       if (Platform.isAndroid) {
@@ -144,6 +202,7 @@ class UpdateChecker {
             dio: dio,
             url: url,
             savePath: savePath,
+            apkHash: apkHash,
           ),
         );
       }
@@ -161,12 +220,14 @@ class DownloadProgressDialog extends StatefulWidget {
   final Dio dio;
   final String url;
   final String savePath;
+  final String apkHash;
 
   const DownloadProgressDialog({
     super.key,
     required this.dio,
     required this.url,
     required this.savePath,
+    required this.apkHash,
   });
 
   @override
@@ -197,6 +258,28 @@ class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
           }
         },
       );
+
+      // After download, verify the APK hash
+      final file = File(widget.savePath);
+      if (!await file.exists()) {
+        setState(() {
+          _error = 'APK file not found after download.';
+          _isDownloading = false;
+        });
+        return;
+      }
+      final bytes = await file.readAsBytes();
+      final digest = sha256.convert(bytes);
+      final downloadedHash = digest.toString();
+      if (downloadedHash.toLowerCase() != widget.apkHash.toLowerCase()) {
+        // Delete the potentially malicious file
+        await file.delete();
+        setState(() {
+          _error = 'Downloaded APK failed integrity check. Update aborted.';
+          _isDownloading = false;
+        });
+        return;
+      }
 
       setState(() {
         _isDownloading = false;
