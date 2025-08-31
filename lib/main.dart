@@ -11,7 +11,7 @@ import 'package:modern_auth_app/screens/auth/auth_options_screen.dart';
 import 'package:modern_auth_app/screens/auth/login_screen.dart';
 import 'package:modern_auth_app/screens/auth/signup_screen.dart';
 import 'package:modern_auth_app/screens/auth/verify_email_screen.dart';
-import 'package:modern_auth_app/screens/feed/issue_details_screen.dart';
+import 'package:modern_auth_app/screens/feed/issue_details_screen_simple.dart';
 import 'package:modern_auth_app/screens/initial_route_manager.dart';
 import 'package:modern_auth_app/screens/language_selection_screen.dart';
 import 'package:modern_auth_app/screens/main_app_scaffold.dart';
@@ -19,7 +19,6 @@ import 'package:modern_auth_app/screens/notifications/notifications_screen.dart'
 import 'package:modern_auth_app/screens/public_dashboard_screen.dart';
 import 'package:modern_auth_app/screens/role_selection_screen.dart';
 import 'package:modern_auth_app/screens/profile/unsynced_issues_screen.dart';
-import 'package:modern_auth_app/screens/debug/notification_debug_screen_v2.dart';
 import 'package:modern_auth_app/services/auth_service.dart';
 import 'package:modern_auth_app/services/connectivity_service.dart'; // Add ConnectivityService import
 import 'package:modern_auth_app/services/firestore_service.dart'; // Add FirestoreService import
@@ -29,7 +28,7 @@ import 'package:modern_auth_app/services/notification_service.dart';
 import 'package:modern_auth_app/services/user_profile_service.dart';
 import 'package:modern_auth_app/services/local_data_service.dart';
 import 'package:modern_auth_app/services/offline_sync_service.dart';
-import 'package:modern_auth_app/services/app_check_test_service.dart';
+import 'package:modern_auth_app/secrets.dart';
 import 'package:provider/provider.dart';
 
 // Top-level background message handler (as required by FCM)
@@ -181,19 +180,56 @@ void main() async {
 
   await Firebase.initializeApp();
 
-  // Configure App Check with debug token for both debug and release builds
-  await FirebaseAppCheck.instance.activate(
-    webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
-    // Use debug provider for both debug and release builds to allow manual APK distribution
-    androidProvider: AndroidProvider.debug,
-    appleProvider: AppleProvider.appAttest,
-  );
+  // Configure App Check with debug token for development, testing, and manual APK distribution
+  try {
+    developer.log(
+      'Configuring App Check with debug token: $app_debug_token',
+      name: 'AppCheck',
+    );
 
-  // Set the debug token for App Check
-  await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
+    await FirebaseAppCheck.instance.activate(
+      webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+      // Use debug provider for both debug and release builds to allow manual APK distribution
+      // This allows the app to work without Play Store attestation
+      androidProvider: AndroidProvider.debug,
+      appleProvider: AppleProvider.appAttest,
+    );
 
-  // Test App Check functionality
-  await AppCheckTestService.testAppCheckToken();
+    // Enable auto-refresh for the debug token
+    await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
+
+    developer.log('App Check activated successfully', name: 'AppCheck');
+
+    // Wait a moment for App Check to initialize
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Verify the token is working
+    final token = await FirebaseAppCheck.instance.getToken();
+    if (token != null && token.isNotEmpty) {
+      developer.log(
+        '✅ App Check token obtained successfully (length: ${token.length})',
+        name: 'AppCheck',
+      );
+    } else {
+      developer.log('❌ App Check token is null or empty', name: 'AppCheck');
+      developer.log(
+        'Debug token configured: $app_debug_token',
+        name: 'AppCheck',
+      );
+      developer.log(
+        'Make sure this token is added to Firebase Console > App Check',
+        name: 'AppCheck',
+      );
+    }
+  } catch (e) {
+    developer.log('❌ App Check activation failed: $e', name: 'AppCheck');
+    developer.log('Debug token: $app_debug_token', name: 'AppCheck');
+    developer.log(
+      'Make sure the debug token is registered in Firebase Console',
+      name: 'AppCheck',
+    );
+    // Continue execution even if App Check fails to allow development
+  }
 
   // Set the background messaging handler for FCM
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -461,17 +497,22 @@ class _MyAppState extends State<MyApp> {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/verify_email_screen': (context) => const VerifyEmailScreen(),
-            '/app': (context) => const MainAppScaffold(),
+            '/app': (context) {
+              final args =
+                  ModalRoute.of(context)!.settings.arguments
+                      as Map<String, dynamic>?;
+              return MainAppScaffold(initialTabIndex: args?['initialTabIndex']);
+            },
             '/notifications': (context) => const NotificationsScreen(),
             '/issue_details': (context) {
               final issueId =
                   ModalRoute.of(context)!.settings.arguments as String?;
-              return IssueDetailsScreen(issueId: issueId ?? 'error_no_id');
+              return IssueDetailsScreenSimple(
+                issueId: issueId ?? 'error_no_id',
+              );
             },
             '/public_dashboard': (context) => const PublicDashboardScreen(),
             '/unsynced_issues': (context) => const UnsyncedIssuesScreen(),
-            '/notification_debug':
-                (context) => const NotificationDebugScreenV2(),
           },
         );
       },

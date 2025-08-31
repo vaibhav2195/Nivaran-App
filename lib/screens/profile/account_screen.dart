@@ -207,7 +207,8 @@ class AccountScreen extends StatelessWidget {
           _buildListTile(
             context: context,
             icon: Icons.sync_problem_outlined,
-            title: "Unsynced Issues",
+            title: AppLocalizations.of(context)!.unsyncedIssues,
+            subtitle: AppLocalizations.of(context)!.viewAndManageOfflineIssues,
             onTap: () {
               Navigator.pushNamed(context, '/unsynced_issues');
             },
@@ -228,36 +229,14 @@ class AccountScreen extends StatelessWidget {
           _buildListTile(
             context: context,
             icon: Icons.help_outline_rounded,
-            title: AppLocalizations.of(context)!.settings,
+            title: "Help & Support",
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Help & Support - Coming Soon!")),
               );
             },
           ),
-          _buildListTile(
-            context: context,
-            icon: Icons.settings_outlined,
-            title: AppLocalizations.of(context)!.settings,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("App Settings - Coming Soon!")),
-              );
-            },
-          ),
 
-          // Debug section (only show in development)
-          const SizedBox(height: 10),
-          _buildSectionTitle(context, "🔧 Debug Tools"),
-          _buildListTile(
-            context: context,
-            icon: Icons.bug_report,
-            title: "🚨 Push Notification Debug",
-            subtitle: "Test and troubleshoot push notifications",
-            onTap: () {
-              Navigator.pushNamed(context, '/notification_debug');
-            },
-          ),
           _buildListTile(
             context: context,
             icon: Icons.language,
@@ -283,6 +262,7 @@ class AccountScreen extends StatelessWidget {
               items: const [
                 DropdownMenuItem(value: Locale('en'), child: Text("English")),
                 DropdownMenuItem(value: Locale('hi'), child: Text("हिंदी")),
+                DropdownMenuItem(value: Locale('gu'), child: Text("ગુજરાતી")),
               ],
             ),
             onTap: () {

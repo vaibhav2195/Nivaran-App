@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hindi => 'Hindi';
 
   @override
+  String get gujarati => 'Gujarati';
+
+  @override
   String get welcomeToNivaran => 'Welcome to Nivaran';
 
   @override
@@ -440,4 +443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cachedData => 'Cached Data';
+
+  @override
+  String get help => 'Help & Support';
 }

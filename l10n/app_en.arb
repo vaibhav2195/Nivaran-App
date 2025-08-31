@@ -3,6 +3,7 @@
   "chooseYourLanguage": "Choose Your Language",
   "english": "English",
   "hindi": "Hindi",
+  "gujarati": "Gujarati",
   "welcomeToNivaran": "Welcome to Nivaran",
   "iAmA": "I am a...",
   "citizen": "Citizen",
@@ -62,7 +63,7 @@
   "upvoted": "Upvoted",
   "collaboration": "Collaboration",
   "timeline": "Timeline",
-"analyzingImageWithAI": "Analyzing image with AI...",
+  "analyzingImageWithAI": "Analyzing image with AI...",
   "loadingCategories": "Loading categories...",
   "share": "Share",
   "tenKmRadius": "10 km radius",
@@ -88,7 +89,6 @@
   "waterLeakage": "Water Leakage",
   "fetchingLocationAndCategories": "Fetching location and categories...",
   "aiAnalysisComplete": "AI analysis complete",
-  "publicDashboard": "Public Dashboard",
   "predictiveMaintenanceInsights": "Predictive Maintenance Insights",
   "areasLikelyToReoccur": "Areas where issues are likely to reoccur based on historical patterns",
   "proactiveMaintenanceBenefit": "Proactive maintenance in this area could prevent recurring issues.",
@@ -137,9 +137,8 @@
   "myReportedIssues": "My Reported Issues",
   "deleteIssue": "Delete Issue?",
   "deleteIssueConfirmation": "Are you sure you want to delete this issue? This action cannot be undone.",
-  "delete": "Delete",
-  "cancel": "Cancel",
   "locationUnavailable": "Location Unavailable",
   "locationError": "Location Error",
-  "cachedData": "Cached Data"
+  "cachedData": "Cached Data",
+  "help": "Help & Support"
 }
